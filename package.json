@@ -11,7 +11,7 @@
     "telephony:start": "node --env-file-if-exists=.env.local --import tsx server/index.ts",
     "build": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext build",
     "start": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext start",
-    "test": "node --test tests/safety.test.mjs",
+    "test": "node --test tests/safety.test.mjs tests/live-call.test.mjs tests/telephony-smoke.test.mjs",
     "test:render": "npm run build && node --test tests/rendered-html.test.mjs",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next"

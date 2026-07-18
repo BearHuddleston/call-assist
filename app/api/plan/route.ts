@@ -5,7 +5,7 @@ import { getOpenAIClient, PLANNING_MODEL } from "@/lib/openai";
 import { screenCallRequest } from "@/lib/safety";
 
 export async function POST(request: Request) {
-  const parsed = CallRequestSchema.safeParse(await request.json());
+  const parsed = CallRequestSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
     return Response.json(
       { error: "Please complete the call goal, facts, and safety confirmation." },
@@ -42,4 +42,3 @@ export async function POST(request: Request) {
     );
   }
 }
-

@@ -65,9 +65,41 @@ export const CallCommandSchema = z.discriminatedUnion("type", [
   }),
 ]);
 
+export const LiveCallEventSchema = z.object({
+  cursor: z.number().int().positive(),
+  at: z.string(),
+  type: z.enum([
+    "call.state",
+    "caption.final",
+    "approval.requested",
+    "approval.resolved",
+    "call.error",
+  ]),
+  data: z.record(z.string(), z.unknown()),
+});
+
+export const LiveCallEventsResponseSchema = z.object({
+  callId: z.string().uuid(),
+  status: z.string(),
+  events: z.array(LiveCallEventSchema),
+});
+
+export const LiveCallStartResponseSchema = z.object({
+  callId: z.string().uuid(),
+  status: z.string(),
+});
+
+export const LiveServiceStatusSchema = z.object({
+  available: z.boolean(),
+  mode: z.enum(["live", "demo"]),
+});
+
 export type CallRequest = z.infer<typeof CallRequestSchema>;
 export type CallPlan = z.infer<typeof CallPlanSchema>;
 export type TranscriptTurn = z.infer<typeof TranscriptTurnSchema>;
 export type CallOutcome = z.infer<typeof CallOutcomeSchema>;
 export type StartCall = z.infer<typeof StartCallSchema>;
 export type CallCommand = z.infer<typeof CallCommandSchema>;
+export type LiveCallEvent = z.infer<typeof LiveCallEventSchema>;
+export type LiveCallEventsResponse = z.infer<typeof LiveCallEventsResponseSchema>;
+export type LiveCallStartResponse = z.infer<typeof LiveCallStartResponseSchema>;

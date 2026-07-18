@@ -17,8 +17,10 @@ This project is being built for OpenAI Build Week in the **Apps for Your Life** 
 - No audio recording and transcript deletion after the outcome is created
 - Credential-gated Twilio outbound calling service with a bidirectional Media Stream bridge to OpenAI Realtime
 - Normalized call-event and supervisor-command proxy routes that keep OpenAI and Twilio credentials off the browser
+- Deliberate live-call mode with a custom allowlisted destination, visual ringing/live/paused states, cursor-based captions, and real approval/control commands
+- Automatic transition from a completed or failed live call into the same structured, transcript-cleared outcome flow
 
-The browser experience remains in judge-safe simulation mode by default. The live calling boundary is implemented but intentionally inactive until credentials, a public HTTPS tunnel, and a real allowlisted destination are configured. Connecting the existing call screen to those live event routes is the next UI milestone.
+The browser experience remains in judge-safe simulation mode by default. Live mode appears only when the private calling service reports that OpenAI, Twilio, an HTTPS webhook endpoint, and the service-to-service token are configured. A real destination must still pass the server-side allowlist before a call starts.
 
 ## Run locally
 
@@ -52,10 +54,15 @@ The separate Fastify service owns the long-lived Twilio Media Stream and OpenAI 
 
 Keep `TWILIO_VALIDATE_SIGNATURES=true` outside a local webhook harness. Do not place a live call until the destination is explicitly allowlisted and the person operating the demo is ready to supervise it.
 
+Once both processes are healthy, choose **Allowlisted live destination…** in the setup screen. The UI will collect the business name and E.164 number, create a reviewable plan, and offer both the safe simulation and supervised live-call buttons.
+
+See [docs/live-call-runbook.md](docs/live-call-runbook.md) before the first controlled call.
+
 ## Verify
 
 ```bash
 npm run typecheck
+npm run lint
 npm test
 npm run build
 npm run test:render
@@ -70,6 +77,8 @@ npm run test:render
 5. Approve the room reservation when Call Assist stops.
 6. Show the structured outcome, confirmation number, and transcript-cleared privacy state.
 
+For a live demo, repeat the same path with one consented, allowlisted test destination. Keep the safe simulation ready as the submission fallback.
+
 ## Current architecture
 
 - **Web app:** React 19 and Next-compatible App Router compiled with vinext
@@ -77,6 +86,8 @@ npm run test:render
 - **Voice service:** OpenAI Realtime API, `gpt-realtime-2.1`, through the Agents SDK Twilio transport
 - **Telephony service:** Fastify, Twilio outbound calls, and bidirectional Media Streams
 - **Hosting target:** Cloudflare Worker-compatible output through OpenAI Sites
+
+The judge-safe web application can run on Sites. The Fastify telephony process needs separate Node hosting with a public HTTPS/WSS endpoint because it owns long-lived provider WebSockets.
 
 ## Safety scope
 
@@ -88,3 +99,4 @@ npm run test:render
 - Prominent pause, correction, approval, decline, and end-call controls
 
 See [docs/project-brief.md](docs/project-brief.md) for the product thesis and Build Week constraints.
+See [docs/submission-checklist.md](docs/submission-checklist.md) for the remaining human-owned submission artifacts.

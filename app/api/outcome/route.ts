@@ -15,7 +15,7 @@ const OutcomeRequestSchema = z.object({
 });
 
 export async function POST(request: Request) {
-  const parsed = OutcomeRequestSchema.safeParse(await request.json());
+  const parsed = OutcomeRequestSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
     return Response.json({ error: "The call outcome payload is invalid." }, { status: 400 });
   }
