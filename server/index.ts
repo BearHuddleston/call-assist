@@ -263,6 +263,7 @@ app.post(
       emit(record, "call.state", { status: call.status });
       return reply.code(201).send({ callId: id, status: call.status });
     } catch (error) {
+      if (record.cleanupTimer) clearTimeout(record.cleanupTimer);
       calls.delete(id);
       request.log.error({ err: error }, "Failed to start Twilio call");
       return reply.code(502).send({ error: "Twilio could not start the call." });

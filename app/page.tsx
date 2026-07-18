@@ -40,7 +40,24 @@ const boundaryOptions = [
   "Do not agree to charges, payments, or purchases.",
 ] as const;
 
-function scriptedCall(destinationId: string): ScriptTurn[] {
+function scriptedCall(
+  destinationId: string,
+  request: CallRequest | null,
+  plan: CallPlan | null,
+): ScriptTurn[] {
+  if (destinationId === "live-custom" && request) {
+    const approvalGate = plan?.approvalGates[0] ?? "Confirm the requested next step";
+    return [
+      { speaker: "agent", text: "Hello, I’m an AI accessibility assistant calling for a user who is following with live captions. May we continue with live transcription?" },
+      { speaker: "business", text: "Yes, that’s okay. How can I help?" },
+      { speaker: "agent", text: `Thank you. The user’s goal is: ${request.goal}.` },
+      { speaker: "business", text: "I can help with that. Before I confirm the requested next step, should I proceed?", approvalGate },
+      { speaker: "agent", text: "The user has approved that next step. Please proceed within the limits we shared." },
+      { speaker: "business", text: "Understood. The requested next step is confirmed for this supervised demonstration. The demo reference is CA-2048." },
+      { speaker: "agent", text: "Thank you. I’ll share that confirmation with the user. Goodbye." },
+    ];
+  }
+
   if (destinationId === "lakeside-center") {
     return [
       { speaker: "agent", text: "Hello, I’m an AI accessibility assistant calling for Maya. Maya is following with live captions. May we continue with live transcription?" },
@@ -157,7 +174,10 @@ export default function Home() {
   const currentPhoneNumber = isLiveDestination
     ? livePhoneNumber.trim()
     : selectedDestination.phoneNumber;
-  const script = useMemo(() => scriptedCall(destinationId), [destinationId]);
+  const script = useMemo(
+    () => scriptedCall(destinationId, activeRequest, plan),
+    [activeRequest, destinationId, plan],
+  );
   const activeStep = steps.findIndex((step) => step.id === stage);
 
   useEffect(() => {
@@ -526,8 +546,8 @@ export default function Home() {
     }
   }
 
-  async function togglePause() {
-    if (commandPending) return;
+  async function togglePause(): Promise<boolean> {
+    if (commandPending) return false;
     const nextPaused = !paused;
     setCommandPending(true);
     setError("");
@@ -540,8 +560,10 @@ export default function Home() {
       }
       setPaused(nextPaused);
       setCorrectionMode(false);
+      return true;
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "The call state could not be changed.");
+      return false;
     } finally {
       setCommandPending(false);
     }
@@ -549,7 +571,7 @@ export default function Home() {
 
   async function beginCorrection() {
     if (commandPending) return;
-    if (callMode === "live" && !paused) await togglePause();
+    if (callMode === "live" && !paused && !await togglePause()) return;
     setCorrectionMode(true);
     setPaused(true);
     window.setTimeout(() => guidanceRef.current?.focus(), 0);
@@ -828,7 +850,7 @@ export default function Home() {
 
                 <form className={`guidance-box ${correctionMode ? "correction" : ""}`} onSubmit={sendGuidance}>
                   <label htmlFor="guidance">{correctionMode ? "Type the correction" : "Type what Call Assist should say"}</label>
-                  <div><input ref={guidanceRef} id="guidance" value={guidance} onChange={(event) => setGuidance(event.target.value)} placeholder={correctionMode ? "My name is spelled…" : "Could you also ask…"} /><button type="submit" disabled={!guidance.trim() || commandPending} aria-label="Send typed guidance">↑</button></div>
+                  <div><input ref={guidanceRef} id="guidance" value={guidance} onChange={(event) => setGuidance(event.target.value)} placeholder={correctionMode ? "My name is spelled…" : "Could you also ask…"} disabled={Boolean(pendingApproval) || callStatus === "ending"} /><button type="submit" disabled={!guidance.trim() || commandPending || Boolean(pendingApproval) || callStatus === "ending"} aria-label="Send typed guidance">↑</button></div>
                   <small>{correctionMode ? "The call stays paused until you resume it." : "Call Assist will say this at the next safe opening."}</small>
                 </form>
 
