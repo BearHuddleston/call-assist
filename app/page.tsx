@@ -2,15 +2,29 @@
 
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type {
+  CallCommand,
   CallOutcome,
   CallPlan,
   CallRequest,
   TranscriptTurn,
 } from "@/lib/contracts";
+import {
+  LiveCallEventsResponseSchema,
+  LiveCallStartResponseSchema,
+  LiveServiceStatusSchema,
+} from "@/lib/contracts";
+import {
+  browserStatus,
+  projectLiveEvents,
+  upsertCaptions,
+  type BrowserCallStatus,
+  type LiveApproval,
+} from "@/lib/live-call";
 import { DEMO_DESTINATIONS } from "@/lib/safety";
 
 type Stage = "setup" | "review" | "call" | "outcome";
-type CallStatus = "connecting" | "connected" | "ending";
+type CallMode = "demo" | "live";
+type LiveAvailability = "checking" | "ready" | "unavailable";
 type ScriptTurn = Omit<TranscriptTurn, "id"> & { approvalGate?: string };
 
 const steps: Array<{ id: Stage; label: string }> = [
@@ -26,7 +40,24 @@ const boundaryOptions = [
   "Do not agree to charges, payments, or purchases.",
 ] as const;
 
-function scriptedCall(destinationId: string): ScriptTurn[] {
+function scriptedCall(
+  destinationId: string,
+  request: CallRequest | null,
+  plan: CallPlan | null,
+): ScriptTurn[] {
+  if (destinationId === "live-custom" && request) {
+    const approvalGate = plan?.approvalGates[0] ?? "Confirm the requested next step";
+    return [
+      { speaker: "agent", text: "Hello, I’m an AI accessibility assistant calling for a user who is following with live captions. May we continue with live transcription?" },
+      { speaker: "business", text: "Yes, that’s okay. How can I help?" },
+      { speaker: "agent", text: `Thank you. The user’s goal is: ${request.goal}.` },
+      { speaker: "business", text: "I can help with that. Before I confirm the requested next step, should I proceed?", approvalGate },
+      { speaker: "agent", text: "The user has approved that next step. Please proceed within the limits we shared." },
+      { speaker: "business", text: "Understood. The requested next step is confirmed for this supervised demonstration. The demo reference is CA-2048." },
+      { speaker: "agent", text: "Thank you. I’ll share that confirmation with the user. Goodbye." },
+    ];
+  }
+
   if (destinationId === "lakeside-center") {
     return [
       { speaker: "agent", text: "Hello, I’m an AI accessibility assistant calling for Maya. Maya is following with live captions. May we continue with live transcription?" },
@@ -61,9 +92,43 @@ function speakerLabel(speaker: TranscriptTurn["speaker"]): string {
   return "Call status";
 }
 
+function phoneLabel(phoneNumber: string): string {
+  const digits = phoneNumber.replace(/\D/g, "");
+  if (digits.length === 11 && digits.startsWith("1")) {
+    return `(${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7)}`;
+  }
+  return phoneNumber;
+}
+
+function callStatusLabel(
+  status: BrowserCallStatus,
+  paused: boolean,
+  mode: CallMode | null,
+): string {
+  if (paused) return "Paused by you";
+  if (status === "connecting") return mode === "live" ? "Starting call…" : "Connecting…";
+  if (status === "ringing") return "Ringing…";
+  if (status === "ending") return "Ending call…";
+  if (status === "ended") return "Call ended";
+  if (status === "failed") return "Call disconnected";
+  return mode === "live" ? "Live call" : "Live demo";
+}
+
+async function sendLiveCommand(callId: string, command: CallCommand): Promise<void> {
+  const response = await fetch(`/api/live/${callId}/commands`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(command),
+  });
+  const data = await response.json() as { error?: string };
+  if (!response.ok) throw new Error(data.error ?? "The call command could not be sent.");
+}
+
 export default function Home() {
   const [stage, setStage] = useState<Stage>("setup");
   const [destinationId, setDestinationId] = useState("westside-library");
+  const [liveDestinationName, setLiveDestinationName] = useState("");
+  const [livePhoneNumber, setLivePhoneNumber] = useState("");
   const [goal, setGoal] = useState(
     "Reserve a quiet study room next Tuesday at 2:00 PM for two people",
   );
@@ -77,9 +142,13 @@ export default function Home() {
   const [outcome, setOutcome] = useState<CallOutcome | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [callStatus, setCallStatus] = useState<CallStatus>("connecting");
+  const [commandPending, setCommandPending] = useState(false);
+  const [callMode, setCallMode] = useState<CallMode | null>(null);
+  const [liveAvailability, setLiveAvailability] = useState<LiveAvailability>("checking");
+  const [liveCallId, setLiveCallId] = useState<string | null>(null);
+  const [callStatus, setCallStatus] = useState<BrowserCallStatus>("connecting");
   const [paused, setPaused] = useState(false);
-  const [pendingApproval, setPendingApproval] = useState<string | null>(null);
+  const [pendingApproval, setPendingApproval] = useState<LiveApproval | null>(null);
   const [turnIndex, setTurnIndex] = useState(0);
   const [captions, setCaptions] = useState<TranscriptTurn[]>([]);
   const [guidance, setGuidance] = useState("");
@@ -87,6 +156,9 @@ export default function Home() {
   const [approvedDecision, setApprovedDecision] = useState(false);
   const captionEndRef = useRef<HTMLDivElement | null>(null);
   const guidanceRef = useRef<HTMLInputElement | null>(null);
+  const approvalRef = useRef<HTMLDivElement | null>(null);
+  const captionsRef = useRef<TranscriptTurn[]>([]);
+  const eventCursorRef = useRef(0);
   const endingRef = useRef(false);
 
   const selectedDestination = useMemo(
@@ -95,15 +167,51 @@ export default function Home() {
       DEMO_DESTINATIONS[0],
     [destinationId],
   );
-  const script = useMemo(() => scriptedCall(destinationId), [destinationId]);
+  const isLiveDestination = destinationId === "live-custom";
+  const currentDestinationName = isLiveDestination
+    ? liveDestinationName.trim()
+    : selectedDestination.name;
+  const currentPhoneNumber = isLiveDestination
+    ? livePhoneNumber.trim()
+    : selectedDestination.phoneNumber;
+  const script = useMemo(
+    () => scriptedCall(destinationId, activeRequest, plan),
+    [activeRequest, destinationId, plan],
+  );
   const activeStep = steps.findIndex((step) => step.id === stage);
+
+  useEffect(() => {
+    captionsRef.current = captions;
+  }, [captions]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    void fetch("/api/live/status", { cache: "no-store", signal: controller.signal })
+      .then(async (response) => LiveServiceStatusSchema.parse(await response.json()))
+      .then((status) => setLiveAvailability(status.available ? "ready" : "unavailable"))
+      .catch((caught) => {
+        if (!(caught instanceof DOMException && caught.name === "AbortError")) {
+          setLiveAvailability("unavailable");
+        }
+      });
+    return () => controller.abort();
+  }, []);
 
   useEffect(() => {
     captionEndRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [captions, pendingApproval]);
 
+  useEffect(() => {
+    if (!pendingApproval) return;
+    const timer = window.setTimeout(() => approvalRef.current?.focus(), 0);
+    return () => window.clearTimeout(timer);
+  }, [pendingApproval]);
+
   const finishCall = useCallback(
-    async (status: CallOutcome["status"]) => {
+    async (
+      status: CallOutcome["status"],
+      options: { endProvider?: boolean } = {},
+    ) => {
       if (endingRef.current || !activeRequest) return;
       endingRef.current = true;
       setCallStatus("ending");
@@ -111,10 +219,17 @@ export default function Home() {
       setPendingApproval(null);
 
       try {
+        if (callMode === "live" && liveCallId && options.endProvider !== false) {
+          await sendLiveCommand(liveCallId, { type: "call.end" });
+        }
         const response = await fetch("/api/outcome", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ request: activeRequest, transcript: captions, status }),
+          body: JSON.stringify({
+            request: activeRequest,
+            transcript: captionsRef.current,
+            status,
+          }),
         });
         const data = (await response.json()) as CallOutcome & { error?: string };
         if (!response.ok) throw new Error(data.error ?? "Could not create the outcome.");
@@ -124,23 +239,24 @@ export default function Home() {
       } catch (caught) {
         setError(caught instanceof Error ? caught.message : "Could not create the outcome.");
         endingRef.current = false;
-        setCallStatus("connected");
+        setCallStatus(callMode === "live" ? "failed" : "live");
         setPaused(false);
       }
     },
-    [activeRequest, captions],
+    [activeRequest, callMode, liveCallId],
   );
 
   useEffect(() => {
-    if (stage !== "call" || callStatus !== "connecting") return;
-    const timer = window.setTimeout(() => setCallStatus("connected"), 900);
+    if (stage !== "call" || callMode !== "demo" || callStatus !== "connecting") return;
+    const timer = window.setTimeout(() => setCallStatus("live"), 900);
     return () => window.clearTimeout(timer);
-  }, [stage, callStatus]);
+  }, [stage, callMode, callStatus]);
 
   useEffect(() => {
     if (
       stage !== "call" ||
-      callStatus !== "connected" ||
+      callMode !== "demo" ||
+      callStatus !== "live" ||
       paused ||
       pendingApproval
     ) {
@@ -160,13 +276,79 @@ export default function Home() {
       ]);
       setTurnIndex((current) => current + 1);
       if (nextTurn.approvalGate) {
-        setPendingApproval(nextTurn.approvalGate);
+        setPendingApproval({
+          id: `demo-${turnIndex}`,
+          commitment: nextTurn.approvalGate,
+          reason: "The business is asking Call Assist to make a commitment.",
+        });
         setPaused(true);
       }
     }, turnIndex === 0 ? 600 : 1450);
 
     return () => window.clearTimeout(timer);
-  }, [callStatus, finishCall, paused, pendingApproval, script, stage, turnIndex]);
+  }, [callMode, callStatus, finishCall, paused, pendingApproval, script, stage, turnIndex]);
+
+  useEffect(() => {
+    if (stage !== "call" || callMode !== "live" || !liveCallId) return;
+    let stopped = false;
+    let timer: number | undefined;
+    const controller = new AbortController();
+
+    const poll = async () => {
+      try {
+        const response = await fetch(
+          `/api/live/${liveCallId}/events?after=${eventCursorRef.current}`,
+          { cache: "no-store", signal: controller.signal },
+        );
+        const body = await response.json() as unknown;
+        if (!response.ok) {
+          const message = typeof body === "object" && body && "error" in body
+            ? String(body.error)
+            : "Live call updates are unavailable.";
+          throw new Error(message);
+        }
+
+        const batch = LiveCallEventsResponseSchema.parse(body);
+        if (batch.events.length > 0) {
+          eventCursorRef.current = Math.max(
+            eventCursorRef.current,
+            ...batch.events.map((event) => event.cursor),
+          );
+          const projection = projectLiveEvents(batch.events);
+          if (projection.captions.length > 0) {
+            setCaptions((current) => {
+              const next = upsertCaptions(current, projection.captions);
+              captionsRef.current = next;
+              return next;
+            });
+          }
+          if (projection.approval !== undefined) setPendingApproval(projection.approval);
+          if (projection.paused !== undefined) setPaused(projection.paused);
+          if (projection.status) setCallStatus(projection.status);
+          if (projection.error) setError(projection.error);
+          if (projection.terminalOutcome && !endingRef.current) {
+            window.setTimeout(
+              () => void finishCall(projection.terminalOutcome!, { endProvider: false }),
+              250,
+            );
+          }
+        }
+      } catch (caught) {
+        if (!(caught instanceof DOMException && caught.name === "AbortError")) {
+          setError(caught instanceof Error ? caught.message : "Live call updates are unavailable.");
+        }
+      } finally {
+        if (!stopped) timer = window.setTimeout(() => void poll(), 750);
+      }
+    };
+
+    void poll();
+    return () => {
+      stopped = true;
+      controller.abort();
+      if (timer) window.clearTimeout(timer);
+    };
+  }, [callMode, finishCall, liveCallId, stage]);
 
   async function handlePlan(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -178,9 +360,9 @@ export default function Home() {
     setLoading(true);
 
     const request: CallRequest = {
-      destinationId: selectedDestination.id,
-      destinationName: selectedDestination.name,
-      phoneNumber: selectedDestination.phoneNumber,
+      destinationId: isLiveDestination ? "live-custom" : selectedDestination.id,
+      destinationName: currentDestinationName,
+      phoneNumber: currentPhoneNumber,
       goal: goal.trim(),
       facts: facts.trim(),
       boundaries,
@@ -213,15 +395,28 @@ export default function Home() {
     );
   }
 
+  function appendCaptions(...turns: TranscriptTurn[]) {
+    setCaptions((current) => {
+      const next = [...current, ...turns];
+      captionsRef.current = next;
+      return next;
+    });
+  }
+
   function startDemoCall() {
     setError("");
-    setCaptions([
+    const initialCaptions: TranscriptTurn[] = [
       {
         id: "system-connected",
         speaker: "system",
         text: "Secure demo call starting. No audio is recorded.",
       },
-    ]);
+    ];
+    setCaptions(initialCaptions);
+    captionsRef.current = initialCaptions;
+    setCallMode("demo");
+    setLiveCallId(null);
+    eventCursorRef.current = 0;
     setTurnIndex(0);
     setPaused(false);
     setPendingApproval(null);
@@ -231,58 +426,152 @@ export default function Home() {
     setStage("call");
   }
 
-  function handleApproval(approved: boolean) {
-    if (!pendingApproval) return;
-    setApprovedDecision(approved);
-    setCaptions((current) => [
-      ...current,
-      {
-        id: `approval-${Date.now()}`,
-        speaker: "user",
-        text: approved
-          ? `Approved the reservation: ${pendingApproval}`
-          : `Did not approve: ${pendingApproval}`,
-      },
-    ]);
-    setPendingApproval(null);
-    setPaused(false);
-
-    if (!approved) {
-      setCaptions((current) => [
-        ...current,
-        {
-          id: `decline-${Date.now()}`,
-          speaker: "agent",
-          text: "Maya does not want to make that commitment today. Thank you for the information.",
-        },
-      ]);
-      window.setTimeout(() => void finishCall("partial"), 500);
+  async function startLiveCall() {
+    if (!activeRequest || !plan || liveAvailability !== "ready") return;
+    setError("");
+    setLoading(true);
+    try {
+      const response = await fetch("/api/live/start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ request: activeRequest, plan }),
+      });
+      const body = await response.json() as unknown;
+      if (!response.ok) {
+        const message = typeof body === "object" && body && "error" in body
+          ? String(body.error)
+          : "The live call could not start.";
+        throw new Error(message);
+      }
+      const started = LiveCallStartResponseSchema.parse(body);
+      const initialCaptions: TranscriptTurn[] = [{
+        id: "system-live-starting",
+        speaker: "system",
+        text: "Live call requested. No audio is recorded; captions remain temporary.",
+      }];
+      setCaptions(initialCaptions);
+      captionsRef.current = initialCaptions;
+      eventCursorRef.current = 0;
+      setLiveCallId(started.callId);
+      setCallMode("live");
+      setCallStatus(browserStatus(started.status));
+      setPaused(false);
+      setPendingApproval(null);
+      setApprovedDecision(false);
+      endingRef.current = false;
+      setStage("call");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "The live call could not start.");
+    } finally {
+      setLoading(false);
     }
   }
 
-  function sendGuidance(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const message = guidance.trim();
-    if (!message) return;
-
-    setCaptions((current) => [
-      ...current,
-      {
-        id: `user-${Date.now()}`,
+  async function handleApproval(approved: boolean) {
+    const approval = pendingApproval;
+    if (!approval || commandPending) return;
+    setCommandPending(true);
+    setError("");
+    try {
+      if (callMode === "live") {
+        if (!liveCallId) throw new Error("The live call is no longer connected.");
+        await sendLiveCommand(liveCallId, {
+          type: "approval.resolve",
+          approvalId: approval.id,
+          approved,
+        });
+      }
+      setApprovedDecision(approved);
+      appendCaptions({
+        id: `approval-${Date.now()}`,
         speaker: "user",
-        text: correctionMode ? `Correction: ${message}` : `Say this: ${message}`,
-      },
-      {
-        id: `agent-guidance-${Date.now()}`,
-        speaker: "agent",
-        text: correctionMode ? `A correction from Maya: ${message}` : message,
-      },
-    ]);
-    setGuidance("");
-    setCorrectionMode(false);
+        text: approved
+          ? `Approved: ${approval.commitment}`
+          : `Did not approve: ${approval.commitment}`,
+      });
+      setPendingApproval(null);
+      setPaused(false);
+
+      if (!approved && callMode === "demo") {
+        appendCaptions({
+          id: `decline-${Date.now()}`,
+          speaker: "agent",
+          text: "Maya does not want to make that commitment today. Thank you for the information.",
+        });
+        window.setTimeout(() => void finishCall("partial"), 500);
+      }
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "The approval decision could not be sent.");
+    } finally {
+      setCommandPending(false);
+    }
   }
 
-  function beginCorrection() {
+  async function sendGuidance(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const message = guidance.trim();
+    if (!message || commandPending) return;
+    const wasCorrection = correctionMode;
+    setCommandPending(true);
+    setError("");
+
+    try {
+      if (callMode === "live") {
+        if (!liveCallId) throw new Error("The live call is no longer connected.");
+        await sendLiveCommand(liveCallId, {
+          type: wasCorrection ? "guidance.correct" : "guidance.say",
+          text: message,
+        });
+      }
+      const userTurn: TranscriptTurn = {
+        id: `user-${Date.now()}`,
+        speaker: "user",
+        text: wasCorrection ? `Correction: ${message}` : `Say this: ${message}`,
+      };
+      if (callMode === "demo") {
+        appendCaptions(userTurn, {
+          id: `agent-guidance-${Date.now()}`,
+          speaker: "agent",
+          text: wasCorrection ? `A correction from Maya: ${message}` : message,
+        });
+      } else {
+        appendCaptions(userTurn);
+      }
+      setGuidance("");
+      setCorrectionMode(false);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "The guidance could not be sent.");
+    } finally {
+      setCommandPending(false);
+    }
+  }
+
+  async function togglePause(): Promise<boolean> {
+    if (commandPending) return false;
+    const nextPaused = !paused;
+    setCommandPending(true);
+    setError("");
+    try {
+      if (callMode === "live") {
+        if (!liveCallId) throw new Error("The live call is no longer connected.");
+        await sendLiveCommand(liveCallId, {
+          type: nextPaused ? "call.pause" : "call.resume",
+        });
+      }
+      setPaused(nextPaused);
+      setCorrectionMode(false);
+      return true;
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "The call state could not be changed.");
+      return false;
+    } finally {
+      setCommandPending(false);
+    }
+  }
+
+  async function beginCorrection() {
+    if (commandPending) return;
+    if (callMode === "live" && !paused && !await togglePause()) return;
     setCorrectionMode(true);
     setPaused(true);
     window.setTimeout(() => guidanceRef.current?.focus(), 0);
@@ -294,9 +583,15 @@ export default function Home() {
     setOutcome(null);
     setActiveRequest(null);
     setCaptions([]);
+    captionsRef.current = [];
     setTurnIndex(0);
     setPendingApproval(null);
     setPaused(false);
+    setCallMode(null);
+    setLiveCallId(null);
+    setCallStatus("connecting");
+    setCommandPending(false);
+    eventCursorRef.current = 0;
     setSafetyConfirmed(false);
     setError("");
     endingRef.current = false;
@@ -313,7 +608,14 @@ export default function Home() {
             <small>Calls you can read and control</small>
           </span>
         </div>
-        <div className="demo-badge"><span aria-hidden="true" /> Safe demo mode</div>
+        <div className={`demo-badge ${liveAvailability === "ready" ? "live-ready" : ""}`}>
+          <span aria-hidden="true" />
+          {liveAvailability === "checking"
+            ? "Checking live service…"
+            : liveAvailability === "ready"
+              ? "Live service ready"
+              : "Safe demo ready"}
+        </div>
       </header>
 
       <div className="workspace" id="main-content">
@@ -361,9 +663,45 @@ export default function Home() {
                   {DEMO_DESTINATIONS.map((destination) => (
                     <option key={destination.id} value={destination.id}>{destination.name}</option>
                   ))}
+                  {liveAvailability === "ready" && (
+                    <option value="live-custom">Allowlisted live destination…</option>
+                  )}
                 </select>
-                <p className="field-hint">Allowlisted demo destination · {selectedDestination.displayNumber}</p>
+                <p className="field-hint">
+                  {isLiveDestination
+                    ? "The server will verify this number against the private allowlist."
+                    : `Allowlisted demo destination · ${selectedDestination.displayNumber}`}
+                </p>
               </div>
+
+              {isLiveDestination && (
+                <div className="live-destination-fields">
+                  <div className="field-group">
+                    <label htmlFor="live-name">Business or service name</label>
+                    <input
+                      id="live-name"
+                      type="text"
+                      value={liveDestinationName}
+                      onChange={(event) => setLiveDestinationName(event.target.value)}
+                      placeholder="Neighborhood library"
+                      required
+                    />
+                  </div>
+                  <div className="field-group">
+                    <label htmlFor="live-phone">Allowlisted phone number</label>
+                    <input
+                      id="live-phone"
+                      type="tel"
+                      value={livePhoneNumber}
+                      onChange={(event) => setLivePhoneNumber(event.target.value)}
+                      placeholder="+13125550100"
+                      autoComplete="tel"
+                      required
+                    />
+                    <p className="field-hint">Use E.164 format, including country code.</p>
+                  </div>
+                </div>
+              )}
 
               <div className="field-group">
                 <label htmlFor="goal">What should the call accomplish?</label>
@@ -414,7 +752,7 @@ export default function Home() {
               <article className="plan-card plan-main">
                 <div className="card-kicker">Call objective</div>
                 <h2>{plan.objective}</h2>
-                <div className="destination-line"><span aria-hidden="true">☎</span><span><strong>{plan.destination}</strong><small>{selectedDestination.displayNumber} · allowlisted</small></span></div>
+                <div className="destination-line"><span aria-hidden="true">☎</span><span><strong>{plan.destination}</strong><small>{phoneLabel(activeRequest.phoneNumber)} · allowlisted</small></span></div>
                 <div className="script-preview"><span>Opening disclosure</span><p>“{plan.openingScript}”</p></div>
               </article>
 
@@ -446,7 +784,17 @@ export default function Home() {
 
             <div className="review-actions">
               <button className="secondary-button" type="button" onClick={() => setStage("setup")}>← Edit details</button>
-              <div><p><span aria-hidden="true">●</span> This demo does not place a real phone call</p><button className="primary-button" type="button" onClick={startDemoCall}>Start supervised demo call <span aria-hidden="true">→</span></button></div>
+              <div>
+                <p><span aria-hidden="true">●</span> The supervised simulation never places a phone call.</p>
+                <div className="start-call-actions">
+                  <button className="secondary-button" type="button" onClick={startDemoCall}>Run safe demo</button>
+                  {isLiveDestination && liveAvailability === "ready" && (
+                    <button className="primary-button" type="button" onClick={() => void startLiveCall()} disabled={loading}>
+                      {loading ? "Starting live call…" : "Start supervised live call"}<span aria-hidden="true">→</span>
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
           </section>
         )}
@@ -455,13 +803,13 @@ export default function Home() {
           <section className="call-section" aria-labelledby="call-heading">
             <div className="call-header">
               <div className="call-party">
-                <span className="party-avatar" aria-hidden="true">W</span>
-                <div><p className="eyebrow">Calling</p><h1 id="call-heading">{activeRequest.destinationName}</h1><p>{selectedDestination.displayNumber}</p></div>
+                <span className="party-avatar" aria-hidden="true">{activeRequest.destinationName.charAt(0).toUpperCase()}</span>
+                <div><p className="eyebrow">{callMode === "live" ? "Live call" : "Demo call"}</p><h1 id="call-heading">{activeRequest.destinationName}</h1><p>{phoneLabel(activeRequest.phoneNumber)}</p></div>
               </div>
               <div className={`call-state ${callStatus}`} role="status" aria-live="polite">
-                <span aria-hidden="true" /> {callStatus === "connecting" ? "Connecting…" : callStatus === "ending" ? "Ending call…" : paused ? "Paused by you" : "Live demo"}
+                <span aria-hidden="true" /> {callStatusLabel(callStatus, paused, callMode)}
               </div>
-              <button className="end-call-button" type="button" onClick={() => void finishCall("ended")} disabled={callStatus === "ending"}><span aria-hidden="true">⌕</span> End call</button>
+              <button className="end-call-button" type="button" onClick={() => void finishCall("ended")} disabled={callStatus === "ending" || commandPending}><span aria-hidden="true">⌕</span> End call</button>
             </div>
 
             <div className="call-grid">
@@ -481,31 +829,32 @@ export default function Home() {
 
               <aside className="control-panel" aria-label="Call controls">
                 {pendingApproval ? (
-                  <div className="approval-gate" role="alertdialog" aria-labelledby="approval-heading" aria-describedby="approval-detail">
+                  <div ref={approvalRef} className="approval-gate" role="alertdialog" aria-labelledby="approval-heading" aria-describedby="approval-detail approval-reason" tabIndex={-1}>
                     <div className="approval-icon" aria-hidden="true">!</div>
                     <p className="eyebrow">Your approval is required</p>
                     <h2 id="approval-heading">Should Call Assist commit to this?</h2>
-                    <p id="approval-detail">{pendingApproval}</p>
-                    <div className="approval-actions"><button type="button" className="approve-button" onClick={() => handleApproval(true)}>Yes, approve</button><button type="button" className="decline-button" onClick={() => handleApproval(false)}>No, don’t</button></div>
-                    <small>Nothing will happen until you choose.</small>
+                    <p id="approval-detail">{pendingApproval.commitment}</p>
+                    <p className="approval-reason" id="approval-reason">{pendingApproval.reason}</p>
+                    <div className="approval-actions"><button type="button" className="approve-button" onClick={() => void handleApproval(true)} disabled={commandPending}>Yes, approve</button><button type="button" className="decline-button" onClick={() => void handleApproval(false)} disabled={commandPending}>No, don’t</button></div>
+                    <small>{commandPending ? "Sending your decision…" : "Nothing will happen until you choose."}</small>
                   </div>
                 ) : (
                   <>
                     <div className="control-intro"><p className="eyebrow">You’re in control</p><h2>{paused ? "The assistant is paused." : "Following the conversation."}</h2><p>{paused ? "Type a correction or resume when you’re ready." : "Jump in at any moment without speaking."}</p></div>
-                    <button className={`pause-button ${paused ? "resume" : ""}`} type="button" onClick={() => { setPaused((current) => !current); setCorrectionMode(false); }}>
+                    <button className={`pause-button ${paused ? "resume" : ""}`} type="button" onClick={() => void togglePause()} disabled={commandPending || callStatus === "ending"}>
                       <span aria-hidden="true">{paused ? "▶" : "Ⅱ"}</span>{paused ? "Resume Call Assist" : "Pause Call Assist"}
                     </button>
-                    <button className="correction-button" type="button" onClick={beginCorrection}><span aria-hidden="true">✎</span> Correct a detail</button>
+                    <button className="correction-button" type="button" onClick={() => void beginCorrection()} disabled={commandPending || callStatus === "ending"}><span aria-hidden="true">✎</span> Correct a detail</button>
                   </>
                 )}
 
                 <form className={`guidance-box ${correctionMode ? "correction" : ""}`} onSubmit={sendGuidance}>
                   <label htmlFor="guidance">{correctionMode ? "Type the correction" : "Type what Call Assist should say"}</label>
-                  <div><input ref={guidanceRef} id="guidance" value={guidance} onChange={(event) => setGuidance(event.target.value)} placeholder={correctionMode ? "My name is spelled…" : "Could you also ask…"} /><button type="submit" disabled={!guidance.trim()} aria-label="Send typed guidance">↑</button></div>
+                  <div><input ref={guidanceRef} id="guidance" value={guidance} onChange={(event) => setGuidance(event.target.value)} placeholder={correctionMode ? "My name is spelled…" : "Could you also ask…"} disabled={Boolean(pendingApproval) || callStatus === "ending"} /><button type="submit" disabled={!guidance.trim() || commandPending || Boolean(pendingApproval) || callStatus === "ending"} aria-label="Send typed guidance">↑</button></div>
                   <small>{correctionMode ? "The call stays paused until you resume it." : "Call Assist will say this at the next safe opening."}</small>
                 </form>
 
-                <div className="call-safety"><span aria-hidden="true">●</span><p><strong>No audio recording</strong><br />Captions are temporary and cleared after the outcome.</p></div>
+                <div className="call-safety"><span aria-hidden="true">●</span><p><strong>No audio recording</strong><br />{callMode === "live" ? "Provider audio is streamed, not stored. Captions are cleared after the outcome." : "Captions are temporary and cleared after the outcome."}</p></div>
                 {approvedDecision && <p className="approved-note" role="status">✓ Your approval was added to the call.</p>}
               </aside>
             </div>

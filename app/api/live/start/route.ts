@@ -3,7 +3,7 @@ import { screenCallRequest } from "@/lib/safety";
 import { fetchTelephony, relayTelephony } from "@/lib/telephony";
 
 export async function POST(request: Request) {
-  const parsed = StartCallSchema.safeParse(await request.json());
+  const parsed = StartCallSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
     return Response.json({ error: "Invalid live call request." }, { status: 400 });
   }

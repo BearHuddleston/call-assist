@@ -109,6 +109,8 @@ button:disabled { cursor: not-allowed; opacity: 0.56; }
   border-radius: 50%;
   background: var(--green);
 }
+.demo-badge:not(.live-ready) { border-color: #d7dce5; background: #f1f3f6; color: #5b6472; }
+.demo-badge:not(.live-ready) > span { background: #87909e; }
 
 .workspace { width: min(1420px, 100%); margin: 0 auto; padding: 0 clamp(20px, 4vw, 64px) 64px; }
 
@@ -257,6 +259,7 @@ p { margin-top: 0; }
 select,
 textarea,
 input[type="text"],
+input[type="tel"],
 .guidance-box input {
   width: 100%;
   border: 1px solid #b9c0cc;
@@ -266,9 +269,12 @@ input[type="text"],
 }
 
 select,
-textarea { padding: 13px 14px; }
+textarea,
+input[type="text"],
+input[type="tel"] { padding: 13px 14px; }
 textarea { resize: vertical; line-height: 1.5; }
 .field-hint { margin: 0; color: var(--muted); font-size: 0.75rem; line-height: 1.45; }
+.live-destination-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; padding: 16px; border: 1px solid #b9d5c7; border-radius: 12px; background: var(--green-soft); }
 
 .boundary-fieldset { display: grid; gap: 10px; margin: 0; padding: 0; border: 0; }
 .boundary-fieldset legend { margin-bottom: 8px; }
@@ -373,6 +379,7 @@ textarea { resize: vertical; line-height: 1.5; }
 .review-actions > div { display: flex; align-items: center; gap: 18px; }
 .review-actions p { margin: 0; color: var(--muted); font-size: 0.76rem; }
 .review-actions p span { color: var(--green); }
+.start-call-actions { display: flex; align-items: center; gap: 10px; }
 
 .call-section { max-width: 1370px; }
 .call-header {
@@ -446,10 +453,12 @@ textarea { resize: vertical; line-height: 1.5; }
 .approved-note { margin: 0; padding: 10px; border-radius: 8px; background: var(--green-soft); color: var(--green); font-size: 0.75rem; font-weight: 800; text-align: center; }
 
 .approval-gate { padding: 24px 20px; border: 2px solid #d99d2e; border-radius: 16px; background: var(--amber-soft); text-align: center; }
+.approval-gate:focus { outline: 4px solid var(--focus); outline-offset: 4px; }
 .approval-icon { display: grid; width: 46px; height: 46px; margin: 0 auto 14px; place-items: center; border-radius: 50%; background: #d18a13; color: white; font-size: 1.4rem; font-weight: 900; }
 .approval-gate .eyebrow { color: var(--amber); }
 .approval-gate h2 { font-size: 1.25rem; }
 .approval-gate > p:not(.eyebrow) { padding: 12px; border-radius: 9px; background: white; font-weight: 750; line-height: 1.45; }
+.approval-gate .approval-reason { margin: 8px 0 0; padding: 0; background: transparent; color: #795519; font-size: 0.76rem; font-weight: 600; }
 .approval-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin: 18px 0 12px; }
 .approve-button { background: var(--green); color: white; }
 .decline-button { border: 1px solid #b8a06f; background: white; color: var(--ink); }
@@ -508,6 +517,8 @@ textarea { resize: vertical; line-height: 1.5; }
   .review-actions,
   .outcome-actions { align-items: stretch; flex-direction: column-reverse; }
   .review-actions > div { align-items: stretch; flex-direction: column; }
+  .start-call-actions { align-items: stretch; flex-direction: column-reverse; }
+  .live-destination-fields { grid-template-columns: 1fr; }
   .call-header { grid-template-columns: 1fr auto; }
   .call-state { grid-column: 1 / -1; grid-row: 2; justify-self: start; }
   .end-call-button { grid-column: 2; grid-row: 1; }

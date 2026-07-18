@@ -6,7 +6,7 @@ const ParamsSchema = z.object({ callId: z.string().uuid() });
 
 export async function POST(request: Request, context: { params: Promise<{ callId: string }> }) {
   const params = ParamsSchema.safeParse(await context.params);
-  const command = CallCommandSchema.safeParse(await request.json());
+  const command = CallCommandSchema.safeParse(await request.json().catch(() => null));
   if (!params.success || !command.success) {
     return Response.json({ error: "Invalid call command." }, { status: 400 });
   }

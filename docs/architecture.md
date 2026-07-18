@@ -7,7 +7,7 @@
 3. GPT-5.6 Sol returns a strict `CallPlan` through the Responses API. Without credentials, the same contract is filled by the deterministic demo adapter.
 4. The user reviews the disclosure, conversation path, success criteria, approval gates, and stop conditions.
 5. The default call UI runs against a scripted transport. The implemented live service can create a Twilio outbound call and bridge its bidirectional Media Stream to an OpenAI Realtime session once credentials and a public HTTPS endpoint are configured.
-6. Live events are normalized into temporary caption and control events for the browser.
+6. The browser polls cursor-based live events and projects them into the same large caption, approval, and control surfaces used by the scripted path.
 7. After hang-up, `POST /api/outcome` converts the temporary transcript into a strict `CallOutcome`, then the browser clears its transcript state.
 
 ## Stable contracts
@@ -44,7 +44,7 @@ Implemented browser commands:
 
 Provider-specific audio frames, credentials, call SIDs, and Realtime event payloads stay on the server.
 
-The live UI adapter is intentionally still separate from the default scripted demo. It will call `POST /api/live/start`, poll cursor-based events, and send the same supervision actions to `POST /api/live/:callId/commands` after a deliberate operator opt-in.
+The live UI adapter remains deliberately gated from the default scripted demo. It calls `POST /api/live/start`, polls cursor-based events, and sends supervision actions to `POST /api/live/:callId/commands` only after the operator chooses an allowlisted live destination and starts the reviewed plan.
 
 ## Realtime session policy
 
@@ -59,7 +59,7 @@ The live UI adapter is intentionally still separate from the default scripted de
 
 ## Service lifecycle
 
-Call state, final captions, and pending approvals are held in process memory. Completed records are removed after five minutes. This is suitable for the Build Week supervised demo, not a horizontally scaled production deployment. A production version needs a shared ephemeral event store, idempotent webhook handling, explicit concurrency limits, and privacy-reviewed operational logging.
+Call state, final captions, and pending approvals are held in process memory. Completed records are removed after five minutes; abandoned active records expire after thirty minutes. This is suitable for the Build Week supervised demo, not a horizontally scaled production deployment. A production version needs a shared ephemeral event store, idempotent webhook handling, explicit concurrency limits, privacy-reviewed operational logging, and a stable privacy-preserving Realtime safety identifier when the transport supports forwarding it.
 
 ## Privacy
 

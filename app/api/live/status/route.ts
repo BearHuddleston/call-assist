@@ -10,15 +10,9 @@ export async function GET() {
       signal: AbortSignal.timeout(2_000),
     });
     if (!response.ok) throw new Error("The telephony service is unhealthy.");
-    const health = await response.json() as {
-      openaiConfigured?: boolean;
-      twilioConfigured?: boolean;
-      publicUrlConfigured?: boolean;
-    };
-    const providersConfigured = Boolean(
-      health.openaiConfigured && health.twilioConfigured && health.publicUrlConfigured,
-    );
-    return Response.json({ available: providersConfigured, mode: providersConfigured ? "live" : "demo" });
+    const health = await response.json() as { ready?: boolean };
+    const available = health.ready === true;
+    return Response.json({ available, mode: available ? "live" : "demo" });
   } catch {
     return Response.json({ available: false, mode: "demo" });
   }
