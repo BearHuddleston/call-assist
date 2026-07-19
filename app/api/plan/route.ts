@@ -3,6 +3,7 @@ import { CallPlanSchema, CallRequestSchema } from "@/lib/contracts";
 import { createDemoPlan } from "@/lib/demo";
 import {
   getOpenAIClient,
+  getPlanningMode,
   PLANNING_MODEL,
   PLANNING_REASONING_EFFORT,
 } from "@/lib/openai";
@@ -11,6 +12,13 @@ import { screenCallRequest } from "@/lib/safety";
 
 const PLAN_REQUEST_TIMEOUT_MS = 60_000;
 const PLAN_MAX_OUTPUT_TOKENS = 1_600;
+
+export function GET() {
+  return Response.json(
+    { mode: getPlanningMode() },
+    { headers: { "Cache-Control": "no-store" } },
+  );
+}
 
 export async function POST(request: Request) {
   const parsed = CallRequestSchema.safeParse(await request.json().catch(() => null));

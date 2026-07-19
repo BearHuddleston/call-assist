@@ -13,6 +13,7 @@ import {
   LiveCallEventsResponseSchema,
   LiveCallStartResponseSchema,
   LiveServiceStatusSchema,
+  PlanServiceStatusSchema,
 } from "@/lib/contracts";
 import {
   browserStatus,
@@ -21,6 +22,10 @@ import {
   type BrowserCallStatus,
   type LiveApproval,
 } from "@/lib/live-call";
+import {
+  planningStatusMessage,
+  type PlanningExperience,
+} from "@/lib/plan-simulation";
 import { DEMO_DESTINATIONS } from "@/lib/safety";
 
 type Stage = "setup" | "review" | "call" | "outcome";
@@ -101,12 +106,6 @@ function phoneLabel(phoneNumber: string): string {
   return phoneNumber;
 }
 
-function planningStatusMessage(elapsedSeconds: number): string {
-  if (elapsedSeconds < 8) return "GPT-5.6 is preparing the call plan…";
-  if (elapsedSeconds < 20) return "Still preparing a concise, low-pressure conversation path…";
-  return "This is taking longer than usual. You can keep waiting or cancel without losing your details.";
-}
-
 function callStatusLabel(
   status: BrowserCallStatus,
   paused: boolean,
@@ -150,6 +149,7 @@ export default function Home() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [planningElapsedSeconds, setPlanningElapsedSeconds] = useState(0);
+  const [planningExperience, setPlanningExperience] = useState<PlanningExperience>("checking");
   const [commandPending, setCommandPending] = useState(false);
   const [callMode, setCallMode] = useState<CallMode | null>(null);
   const [liveAvailability, setLiveAvailability] = useState<LiveAvailability>("checking");
@@ -204,6 +204,19 @@ export default function Home() {
       .catch((caught) => {
         if (!(caught instanceof DOMException && caught.name === "AbortError")) {
           setLiveAvailability("unavailable");
+        }
+      });
+    return () => controller.abort();
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    void fetch("/api/plan", { cache: "no-store", signal: controller.signal })
+      .then(async (response) => PlanServiceStatusSchema.parse(await response.json()))
+      .then((status) => setPlanningExperience(status.mode))
+      .catch((caught) => {
+        if (!(caught instanceof DOMException && caught.name === "AbortError")) {
+          setPlanningExperience("checking");
         }
       });
     return () => controller.abort();
@@ -431,6 +444,7 @@ export default function Home() {
       if (!parsedPlan.success) {
         throw new Error("The plan response was incomplete. Please try again.");
       }
+      setPlanningExperience(parsedPlan.data.mode);
       if (controller.signal.aborted || attemptId !== planningAttemptRef.current) return;
       setActiveRequest(request);
       setPlan(parsedPlan.data);
@@ -700,7 +714,7 @@ export default function Home() {
             ? "Checking live service…"
             : liveAvailability === "ready"
               ? "Live service ready"
-              : "Safe demo ready"}
+              : "Call simulation ready"}
         </div>
       </header>
 
@@ -739,6 +753,12 @@ export default function Home() {
             </div>
 
             <form className="setup-card" onSubmit={handlePlan} aria-busy={loading}>
+              {planningExperience === "demo" && (
+                <div className="demo-plan-note" role="note">
+                  <span aria-hidden="true">▶</span>
+                  <p><strong>Deterministic simulation</strong><br />This public demo builds a fixed plan from your goal, facts, and limits. It does not send these details to GPT or place a phone call.</p>
+                </div>
+              )}
               <div className="field-group">
                 <label htmlFor="destination">Who should we call?</label>
                 <select
@@ -821,13 +841,15 @@ export default function Home() {
               </label>
 
               <button className="primary-button full-width" type="submit" disabled={loading || boundaries.length === 0}>
-                {loading ? "Creating a safe plan…" : "Create call plan"}<span aria-hidden="true">→</span>
+                {loading
+                  ? planningExperience === "demo" ? "Building simulated plan…" : "Creating a safe plan…"
+                  : planningExperience === "demo" ? "Create simulated plan" : "Create call plan"}<span aria-hidden="true">→</span>
               </button>
               {loading && (
                 <div className="planning-status-panel">
                   <div className="planning-status-copy">
                     <div className="planning-progress" aria-hidden="true"><span /></div>
-                    <strong role="status" aria-live="polite">{planningStatusMessage(planningElapsedSeconds)}</strong>
+                    <strong role="status" aria-live="polite">{planningStatusMessage(planningExperience, planningElapsedSeconds)}</strong>
                     <p aria-hidden="true">Waiting {planningElapsedSeconds} second{planningElapsedSeconds === 1 ? "" : "s"}</p>
                   </div>
                   <button className="secondary-button planning-cancel-button" type="button" onClick={cancelPlan}>Cancel</button>
@@ -844,7 +866,7 @@ export default function Home() {
                 <p className="eyebrow">Ready for your review</p>
                 <h1 id="review-heading" ref={reviewHeadingRef} tabIndex={-1}>Check the plan before anything happens.</h1>
               </div>
-              <span className="mode-chip">{plan.mode === "ai" ? "GPT-5.6 plan" : "Judge-safe simulation"}</span>
+              <span className="mode-chip">{plan.mode === "ai" ? "GPT-5.6 plan" : "Deterministic simulation · no GPT request"}</span>
             </div>
 
             <div className="review-grid">
@@ -886,7 +908,7 @@ export default function Home() {
               <div>
                 <p><span aria-hidden="true">●</span> The supervised simulation never places a phone call.</p>
                 <div className="start-call-actions">
-                  <button className="secondary-button" type="button" onClick={startDemoCall}>Run safe demo</button>
+                  <button className="secondary-button" type="button" onClick={startDemoCall}>Run call simulation</button>
                   {isLiveDestination && liveAvailability === "ready" && (
                     <button className="primary-button" type="button" onClick={() => void startLiveCall()} disabled={loading}>
                       {loading ? "Starting live call…" : "Start supervised live call"}<span aria-hidden="true">→</span>

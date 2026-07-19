@@ -17,6 +17,17 @@ test("the demo plan satisfies the bounded planning contract", () => {
   assert.equal(CallPlanSchema.safeParse(createDemoPlan(request)).success, true);
 });
 
+test("the demo plan is deterministic for the same reviewed request", () => {
+  const first = createDemoPlan(request);
+  const second = createDemoPlan(structuredClone(request));
+
+  assert.deepEqual(first, second);
+  assert.equal(first.objective, request.goal);
+  assert.deepEqual(first.approvedFacts, ["Preferred time: Tuesday at 2 PM", "Two people"]);
+  assert.match(first.approvalGates.join(" "), /reservation/);
+  assert.match(first.stopConditions.join(" "), /Do not share my address/);
+});
+
 test("the planning contract rejects responses that can create runaway latency", () => {
   const plan = createDemoPlan(request);
 

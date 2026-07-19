@@ -94,6 +94,10 @@ export const LiveServiceStatusSchema = z.object({
   mode: z.enum(["live", "demo"]),
 });
 
+export const PlanServiceStatusSchema = z.object({
+  mode: z.enum(["ai", "demo"]),
+});
+
 export type CallRequest = z.infer<typeof CallRequestSchema>;
 export type CallPlan = z.infer<typeof CallPlanSchema>;
 export type TranscriptTurn = z.infer<typeof TranscriptTurnSchema>;
@@ -103,3 +107,4 @@ export type CallCommand = z.infer<typeof CallCommandSchema>;
 export type LiveCallEvent = z.infer<typeof LiveCallEventSchema>;
 export type LiveCallEventsResponse = z.infer<typeof LiveCallEventsResponseSchema>;
 export type LiveCallStartResponse = z.infer<typeof LiveCallStartResponseSchema>;
+export type PlanServiceStatus = z.infer<typeof PlanServiceStatusSchema>;

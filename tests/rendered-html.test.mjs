@@ -36,6 +36,14 @@ test("live calling reports unavailable when its private service is not ready", a
   assert.deepEqual(await response.json(), { available: false, mode: "demo" });
 });
 
+test("planning reports whether it will use AI or a deterministic demo", async () => {
+  const response = await requestWorker("/api/plan");
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get("cache-control") ?? "", /no-store/);
+  const status = await response.json();
+  assert.ok(status.mode === "ai" || status.mode === "demo");
+});
+
 test("live calling rejects malformed requests before provider access", async () => {
   const response = await requestWorker("/api/live/start", {
     method: "POST",
