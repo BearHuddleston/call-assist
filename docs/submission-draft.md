@@ -12,7 +12,7 @@ The pitch is under Devpost's 200-character limit.
 
 **Category:** Apps for Your Life
 
-**Optional thumbnail:** `public/og.png` is available at 1672×941 and 1.81 MB. Devpost recommends a 3:2 image, so crop it before uploading rather than stretching it.
+**Submission thumbnail:** `docs/images/devpost-thumbnail.png` is a 1672×1115, 3:2-safe version of the social card (2.01 MB), ready for Devpost without cropping the name or tagline.
 
 ## About the project
 
