@@ -1,0 +1,32 @@
+01-title
+This demo uses an AI-generated narration voice. For many Deaf and hard-of-hearing people, a simple phone-only task can become a barrier. Call Assist makes the conversation readable and controllable.
+
+02-product
+It is a supervised, text-first calling copilot. The user sets the destination, goal, facts that may be shared, and hard boundaries. The assistant handles the conversation, but the user keeps final control.
+
+03-setup
+Here, Maya wants to reserve a quiet library room. She approves only the minimum facts the assistant needs and forbids fees, payments, or new personal details. She confirms that this is a user-initiated, low-risk call.
+
+04-planning
+For reliable public judging, this site deliberately simulates the GPT-5.6 planning stages and uses the same structured contract without external credentials. In configured mode, the OpenAI Responses API uses GPT-5.6 Sol to turn approved facts and boundaries into a reviewable plan.
+
+05-review
+Nothing happens before review. Maya can check the objective, conversation path, success criteria, and every approval gate. The opening identifies Call Assist as an AI accessibility assistant and asks affirmative consent before live transcription and temporary text review.
+
+06-simulation
+What you are about to see is a judge-safe simulation; it does not place a phone call. The Twilio and OpenAI Realtime path is implemented and has been tested with a consented, allowlisted destination.
+
+07-conversation
+Rather than pressure the person answering with a checklist, Call Assist explains that it is helping someone use live captions, asks one warm consent question, and then uses the plan to make reasonable low-risk choices while keeping the exchange natural.
+
+08-controls
+Maya can pause without speaking, type what Call Assist should say, correct a detail, resume, or end the call. Large two-speaker captions clearly separate the business from the assistant, so she can follow the conversation at a glance.
+
+09-approval
+When the library offers the room, Call Assist stops. Nothing is committed until Maya chooses. Payments, emergencies, marketing, and high-stakes medical or financial calls are blocked entirely; this first release stays deliberately low risk.
+
+10-outcome
+After the call, Maya gets confirmed details, the reference number, next actions, and the full conversation for review. In configured mode, GPT-5.6 structures this outcome. No audio is recorded; the text remains only in this browser tab and can be cleared explicitly.
+
+11-close
+Codex helped me implement and test the accessible React interface, safety guardrails, GPT-5.6 integration, and the Twilio-to-OpenAI Realtime bridge. Call Assist makes phone calls readable.
