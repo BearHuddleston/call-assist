@@ -50,3 +50,7 @@ End immediately if the recipient declines transcription, the call reaches an IVR
 - Rotate any credential that was exposed outside its intended secret store.
 
 Reference architecture: [OpenAI Realtime and audio](https://developers.openai.com/api/docs/guides/realtime), [Twilio bidirectional Media Streams](https://www.twilio.com/docs/voice/media-streams), and [Twilio request validation](https://www.twilio.com/docs/usage/security).
+
+## Build Week validation record
+
+- July 19, 2026: completed a supervised call to a consented, allowlisted test destination and used the resulting experience to refine transcript review and conversational flow. No destination number or transcript was retained in the repository.

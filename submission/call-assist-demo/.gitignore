@@ -1,0 +1,8 @@
+# Regenerable media. Keep the script, narration, captions, and storyboard reviewable.
+audio/
+captures/
+generated/
+output/*.mp4
+output/*.png
+__pycache__/
+.DS_Store

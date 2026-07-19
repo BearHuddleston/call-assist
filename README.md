@@ -1,5 +1,13 @@
 # Call Assist
 
+## Try the demo
+
+- **Judge-safe web app:** [open Call Assist](https://call-assist-accessible-calls.bearhuddleston.chatgpt.site/) — no account, API key, phone number, or telephony credentials required
+- **2:38 walkthrough:** [watch on YouTube](https://youtu.be/sNnt9y9wiq8) — Unlisted; anyone with the URL can watch
+- **Source code:** [view the public repository](https://github.com/BearHuddleston/call-assist)
+
+The public deployment opens in a deterministic supervised simulation so judges can test the complete experience safely in a browser.
+
 Call Assist is a supervised, text-first calling copilot for Deaf and hard-of-hearing people. The user defines a low-risk goal, facts the assistant may share, and hard boundaries; Call Assist creates a reviewable plan, conducts the conversation with large two-speaker captions, and stops for approval before supported bookings, registrations, or cancellations.
 
 This project is being built for OpenAI Build Week in the **Apps for Your Life** category. “Call Assist” is a working title.
@@ -21,6 +29,37 @@ This project is being built for OpenAI Build Week in the **Apps for Your Life** 
 - Automatic transition from a completed or failed live call into the same structured outcome and local transcript-review flow
 
 The browser experience remains in judge-safe simulation mode by default. Live mode appears only when the private calling service reports that OpenAI, Twilio, an HTTPS webhook endpoint, and the service-to-service token are configured. A real destination must still pass the server-side allowlist before a call starts.
+
+## Judge quick test
+
+1. Open the [public demo](https://call-assist-accessible-calls.bearhuddleston.chatgpt.site/). The library-room example is already filled in.
+2. Confirm that the request is low risk and select **Create call plan**. Four visible planning phases make the simulated GPT-5.6 workflow reviewable instead of jumping ahead.
+3. Review the disclosure, success criteria, facts, boundaries, and approval gate, then start the supervised demo call.
+4. Follow the two-speaker captions through the AI/accessibility disclosure and transcription-consent exchange.
+5. Pause the assistant, send a correction or typed **say this** message, resume, and approve the no-payment reservation only when prompted.
+6. End on the structured outcome and temporary transcript review, then use **Clear from this tab**.
+
+The safe demo is the recommended judging path. It depicts the same browser contracts and supervision controls used by the credential-gated Twilio/OpenAI Realtime path while avoiding calls to real people.
+
+## How Codex and GPT-5.6 shaped the project
+
+Call Assist was created during the July 2026 Build Week submission period in Codex with GPT-5.6. The repository history shows the project progressing from a product brief to the judge-safe app, the live telephony bridge, user-experience refinements, and the final demo.
+
+Codex accelerated the work by scaffolding and iterating on the React interface, defining shared call contracts, implementing server-side safety checks, connecting the Fastify/Twilio/OpenAI Realtime path, writing regression and rendered-page tests, investigating model choices, and producing the repeatable demo-video pipeline and documentation. Codex also helped test each milestone and turn observed call friction into focused changes.
+
+The human product and design decisions remained explicit throughout:
+
+- Focus on Deaf and hard-of-hearing users completing ordinary phone-only tasks
+- Keep the MVP user-initiated, allowlisted, low risk, and supervised; defer dynamic IVR/DTMF navigation
+- Prefer synthesis and educated guesses over interrogating the person on the other end of the call
+- Require an AI/accessibility disclosure, affirmative transcription consent, and approval before supported commitments
+- Provide large two-speaker captions, typed guidance, correction, pause, decline, hang-up, post-call transcript review, and explicit clearing controls
+- Record no audio and keep the review transcript ephemeral in the current browser tab
+- Ship a transparent deterministic simulation so judges can evaluate the full experience without credentials or pressure on a real call recipient
+
+GPT-5.6 Sol is used at runtime through the OpenAI Responses API to turn the user's reviewed request into a bounded structured call plan and to turn the completed conversation into a structured outcome. Strict Zod-backed schemas constrain both outputs. The credential-free build fills those same contracts with deterministic data and labels each simulated planning phase honestly. OpenAI Realtime handles the optional voice conversation; it is deliberately a separate model from the GPT-5.6 planning and outcome steps.
+
+The implementation is visible in the [planning route](app/api/plan/route.ts), [outcome route](app/api/outcome/route.ts), [shared contracts](lib/contracts.ts), and [agent prompts](lib/prompts.ts).
 
 ## Run locally
 
@@ -104,3 +143,7 @@ The judge-safe web application can run on Sites. The Fastify telephony process n
 
 See [docs/project-brief.md](docs/project-brief.md) for the product thesis and Build Week constraints.
 See [docs/submission-checklist.md](docs/submission-checklist.md) for the remaining human-owned submission artifacts.
+
+## License
+
+Call Assist source code is available under the [MIT License](LICENSE). Third-party dependencies and assets retain their respective licenses.

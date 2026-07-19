@@ -1,0 +1,179 @@
+1
+00:00:00,000 --> 00:00:02,717
+For many Deaf and hard-of-hearing people, a
+
+2
+00:00:02,717 --> 00:00:05,435
+simple phone-only task can become a barrier.
+
+3
+00:00:05,435 --> 00:00:08,540
+Call Assist makes the conversation readable and controllable.
+
+4
+00:00:08,540 --> 00:00:11,487
+It is a supervised, text-first calling copilot.
+
+5
+00:00:11,487 --> 00:00:14,433
+The user sets the destination, goal, facts
+
+6
+00:00:14,433 --> 00:00:17,380
+that may be shared, and hard boundaries.
+
+7
+00:00:17,380 --> 00:00:22,010
+The assistant handles the conversation, but the user keeps final control.
+
+8
+00:00:22,010 --> 00:00:25,512
+Here, Maya wants to reserve a quiet library room.
+
+9
+00:00:25,512 --> 00:00:29,015
+She approves only the minimum facts the assistant needs
+
+10
+00:00:29,015 --> 00:00:32,128
+and forbids fees, payments, or new personal details.
+
+11
+00:00:32,128 --> 00:00:35,630
+She confirms that this is a user-initiated, low-risk call.
+
+12
+00:00:35,630 --> 00:00:40,803
+For reliable public judging, this site deliberately simulates the GPT-5.6 planning
+
+13
+00:00:40,803 --> 00:00:45,505
+stages and uses the same structured contract without external credentials.
+
+14
+00:00:45,505 --> 00:00:50,208
+In configured mode, the OpenAI Responses API uses GPT-5.6 Sol
+
+15
+00:00:50,208 --> 00:00:54,910
+to turn approved facts and boundaries into a reviewable plan.
+
+16
+00:00:54,910 --> 00:00:56,698
+Nothing happens before review.
+
+17
+00:00:56,698 --> 00:00:59,828
+Maya can check the objective, conversation path,
+
+18
+00:00:59,828 --> 00:01:02,511
+success criteria, and every approval gate.
+
+19
+00:01:02,511 --> 00:01:07,429
+The opening identifies Call Assist as an AI accessibility assistant and
+
+20
+00:01:07,429 --> 00:01:11,900
+asks affirmative consent before live transcription and temporary text review.
+
+21
+00:01:11,900 --> 00:01:15,326
+What you are about to see is a judge-safe simulation;
+
+22
+00:01:15,326 --> 00:01:17,725
+it does not place a phone call.
+
+23
+00:01:17,725 --> 00:01:20,809
+The Twilio and OpenAI Realtime path is implemented and
+
+24
+00:01:20,809 --> 00:01:23,550
+has been tested with a consented, allowlisted destination.
+
+25
+00:01:23,550 --> 00:01:27,175
+Rather than pressure the person answering with a checklist, Call
+
+26
+00:01:27,175 --> 00:01:30,800
+Assist explains that it is helping someone use live captions,
+
+27
+00:01:30,800 --> 00:01:34,425
+asks one warm consent question, and then uses the plan
+
+28
+00:01:34,425 --> 00:01:38,050
+to make reasonable low-risk choices while keeping the exchange natural.
+
+29
+00:01:38,050 --> 00:01:41,824
+Maya can pause without speaking, type what Call Assist should
+
+30
+00:01:41,824 --> 00:01:45,220
+say, correct a detail, resume, or end the call.
+
+31
+00:01:45,220 --> 00:01:48,994
+Large two-speaker captions clearly separate the business from the assistant,
+
+32
+00:01:48,994 --> 00:01:52,390
+so she can follow the conversation at a glance.
+
+33
+00:01:52,390 --> 00:01:56,305
+When the library offers the room, Call Assist stops.
+
+34
+00:01:56,305 --> 00:01:58,915
+Nothing is committed until Maya chooses.
+
+35
+00:01:58,915 --> 00:02:04,135
+Payments, emergencies, marketing, and high-stakes medical or financial calls are blocked entirely;
+
+36
+00:02:04,135 --> 00:02:07,180
+this first release stays deliberately low risk.
+
+37
+00:02:07,180 --> 00:02:11,033
+After the call, Maya gets confirmed details, the reference
+
+38
+00:02:11,033 --> 00:02:14,886
+number, next actions, and the full conversation for review.
+
+39
+00:02:14,886 --> 00:02:17,882
+In configured mode, GPT-5.6 structures this outcome.
+
+40
+00:02:17,882 --> 00:02:19,595
+No audio is recorded;
+
+41
+00:02:19,595 --> 00:02:22,591
+the text remains only in this browser
+
+42
+00:02:22,591 --> 00:02:25,160
+tab and can be cleared explicitly.
+
+43
+00:02:25,160 --> 00:02:30,440
+Codex helped me implement and test the accessible React interface,
+
+44
+00:02:30,440 --> 00:02:35,192
+safety guardrails, GPT-5.6 integration, and the Twilio-to-OpenAI Realtime bridge.
+
+45
+00:02:35,192 --> 00:02:38,360
+Call Assist makes phone calls readable.
