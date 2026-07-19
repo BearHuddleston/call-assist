@@ -23,6 +23,8 @@ import {
   type LiveApproval,
 } from "@/lib/live-call";
 import {
+  DEMO_PLAN_PHASE_DURATION_MS,
+  DEMO_PLAN_PHASES,
   planningStatusMessage,
   type PlanningExperience,
 } from "@/lib/plan-simulation";
@@ -130,6 +132,34 @@ async function sendLiveCommand(callId: string, command: CallCommand): Promise<vo
   if (!response.ok) throw new Error(data.error ?? "The call command could not be sent.");
 }
 
+function waitForDelay(milliseconds: number, signal: AbortSignal): Promise<void> {
+  if (signal.aborted) {
+    return Promise.reject(new DOMException("Plan creation canceled.", "AbortError"));
+  }
+
+  return new Promise((resolve, reject) => {
+    const timer = window.setTimeout(() => {
+      signal.removeEventListener("abort", handleAbort);
+      resolve();
+    }, milliseconds);
+    const handleAbort = () => {
+      window.clearTimeout(timer);
+      reject(new DOMException("Plan creation canceled.", "AbortError"));
+    };
+    signal.addEventListener("abort", handleAbort, { once: true });
+  });
+}
+
+async function runDemoPlanningSequence(
+  signal: AbortSignal,
+  setPhase: (phase: number) => void,
+): Promise<void> {
+  for (let phase = 0; phase < DEMO_PLAN_PHASES.length; phase += 1) {
+    setPhase(phase);
+    await waitForDelay(DEMO_PLAN_PHASE_DURATION_MS, signal);
+  }
+}
+
 export default function Home() {
   const [stage, setStage] = useState<Stage>("setup");
   const [destinationId, setDestinationId] = useState("westside-library");
@@ -150,6 +180,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [planningElapsedSeconds, setPlanningElapsedSeconds] = useState(0);
   const [planningExperience, setPlanningExperience] = useState<PlanningExperience>("checking");
+  const [demoPlanningPhase, setDemoPlanningPhase] = useState<number | null>(null);
   const [commandPending, setCommandPending] = useState(false);
   const [callMode, setCallMode] = useState<CallMode | null>(null);
   const [liveAvailability, setLiveAvailability] = useState<LiveAvailability>("checking");
@@ -412,6 +443,7 @@ export default function Home() {
     planningAbortRef.current = controller;
     const timeout = window.setTimeout(() => controller.abort("timeout"), 65_000);
     setPlanningElapsedSeconds(0);
+    setDemoPlanningPhase(null);
     setLoading(true);
 
     const request: CallRequest = {
@@ -445,6 +477,9 @@ export default function Home() {
         throw new Error("The plan response was incomplete. Please try again.");
       }
       setPlanningExperience(parsedPlan.data.mode);
+      if (parsedPlan.data.mode === "demo") {
+        await runDemoPlanningSequence(controller.signal, setDemoPlanningPhase);
+      }
       if (controller.signal.aborted || attemptId !== planningAttemptRef.current) return;
       setActiveRequest(request);
       setPlan(parsedPlan.data);
@@ -465,6 +500,7 @@ export default function Home() {
       if (attemptId === planningAttemptRef.current) {
         planInFlightRef.current = false;
         planningAbortRef.current = null;
+        setDemoPlanningPhase(null);
         setLoading(false);
       }
     }
@@ -478,6 +514,7 @@ export default function Home() {
     planningAbortRef.current = null;
     controller.abort("canceled");
     setPlanningElapsedSeconds(0);
+    setDemoPlanningPhase(null);
     setLoading(false);
     setError("Plan creation canceled. Your details are still here.");
   }
@@ -714,7 +751,7 @@ export default function Home() {
             ? "Checking live service…"
             : liveAvailability === "ready"
               ? "Live service ready"
-              : "Call simulation ready"}
+              : "Safe demo ready"}
         </div>
       </header>
 
@@ -753,12 +790,6 @@ export default function Home() {
             </div>
 
             <form className="setup-card" onSubmit={handlePlan} aria-busy={loading}>
-              {planningExperience === "demo" && (
-                <div className="demo-plan-note" role="note">
-                  <span aria-hidden="true">▶</span>
-                  <p><strong>Deterministic simulation</strong><br />This public demo builds a fixed plan from your goal, facts, and limits. It does not send these details to GPT or place a phone call.</p>
-                </div>
-              )}
               <div className="field-group">
                 <label htmlFor="destination">Who should we call?</label>
                 <select
@@ -841,15 +872,27 @@ export default function Home() {
               </label>
 
               <button className="primary-button full-width" type="submit" disabled={loading || boundaries.length === 0}>
-                {loading
-                  ? planningExperience === "demo" ? "Building simulated plan…" : "Creating a safe plan…"
-                  : planningExperience === "demo" ? "Create simulated plan" : "Create call plan"}<span aria-hidden="true">→</span>
+                {loading ? "Creating a safe plan…" : "Create call plan"}<span aria-hidden="true">→</span>
               </button>
               {loading && (
                 <div className="planning-status-panel">
                   <div className="planning-status-copy">
                     <div className="planning-progress" aria-hidden="true"><span /></div>
-                    <strong role="status" aria-live="polite">{planningStatusMessage(planningExperience, planningElapsedSeconds)}</strong>
+                    <strong role="status" aria-live="polite">{planningStatusMessage(planningExperience, planningElapsedSeconds, demoPlanningPhase)}</strong>
+                    {planningExperience === "demo" && demoPlanningPhase !== null && (
+                      <ol className="demo-planning-phases" aria-label="Simulated GPT-5.6 planning phases">
+                        {DEMO_PLAN_PHASES.map((phase, index) => (
+                          <li
+                            className={index < demoPlanningPhase ? "is-complete" : index === demoPlanningPhase ? "is-current" : ""}
+                            key={phase}
+                            aria-current={index === demoPlanningPhase ? "step" : undefined}
+                          >
+                            <span aria-hidden="true">{index < demoPlanningPhase ? "✓" : index + 1}</span>
+                            <span>{phase}</span>
+                          </li>
+                        ))}
+                      </ol>
+                    )}
                     <p aria-hidden="true">Waiting {planningElapsedSeconds} second{planningElapsedSeconds === 1 ? "" : "s"}</p>
                   </div>
                   <button className="secondary-button planning-cancel-button" type="button" onClick={cancelPlan}>Cancel</button>
@@ -866,7 +909,7 @@ export default function Home() {
                 <p className="eyebrow">Ready for your review</p>
                 <h1 id="review-heading" ref={reviewHeadingRef} tabIndex={-1}>Check the plan before anything happens.</h1>
               </div>
-              <span className="mode-chip">{plan.mode === "ai" ? "GPT-5.6 plan" : "Deterministic simulation · no GPT request"}</span>
+              <span className="mode-chip">{plan.mode === "ai" ? "GPT-5.6 plan" : "Judge-safe simulation"}</span>
             </div>
 
             <div className="review-grid">
@@ -908,7 +951,7 @@ export default function Home() {
               <div>
                 <p><span aria-hidden="true">●</span> The supervised simulation never places a phone call.</p>
                 <div className="start-call-actions">
-                  <button className="secondary-button" type="button" onClick={startDemoCall}>Run call simulation</button>
+                  <button className="secondary-button" type="button" onClick={startDemoCall}>Run safe demo</button>
                   {isLiveDestination && liveAvailability === "ready" && (
                     <button className="primary-button" type="button" onClick={() => void startLiveCall()} disabled={loading}>
                       {loading ? "Starting live call…" : "Start supervised live call"}<span aria-hidden="true">→</span>

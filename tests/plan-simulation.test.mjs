@@ -1,12 +1,19 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { planningStatusMessage } from "../lib/plan-simulation.ts";
+import {
+  DEMO_PLAN_PHASE_DURATION_MS,
+  DEMO_PLAN_PHASES,
+  planningStatusMessage,
+} from "../lib/plan-simulation.ts";
 
-test("demo planning uses explicit staged simulation messages", () => {
-  assert.match(planningStatusMessage("demo", 0), /^Deterministic simulation:/);
-  assert.match(planningStatusMessage("demo", 1), /low-pressure conversation path/);
-  assert.match(planningStatusMessage("demo", 5), /longer than expected/);
-  assert.doesNotMatch(planningStatusMessage("demo", 0), /GPT-5.6/);
+test("demo planning presents four visible one-second GPT-5.6 simulation phases", () => {
+  assert.equal(DEMO_PLAN_PHASE_DURATION_MS, 1_000);
+  assert.equal(DEMO_PLAN_PHASES.length, 4);
+  for (const [index, phase] of DEMO_PLAN_PHASES.entries()) {
+    const message = planningStatusMessage("demo", index, index);
+    assert.match(message, /Demo mode · Simulating GPT-5.6/);
+    assert.match(message, new RegExp(phase));
+  }
 });
 
 test("AI and unknown planning retain honest mode-specific messages", () => {
