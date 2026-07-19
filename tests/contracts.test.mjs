@@ -103,8 +103,8 @@ test("demo outcomes stay truthful for each destination", () => {
       { id: "custom-confirmed", speaker: "business", text: "Done. The reference is SIM-2048." },
     ],
   );
-  assert.match(custom.headline, /Requested next step/);
-  assert.equal(custom.referenceNumber, "SIM-2048");
+  assert.match(custom.headline, /no commitment made/i);
+  assert.equal(custom.referenceNumber, null);
   assert.doesNotMatch(custom.summary, /study room|pottery/i);
 });
 
@@ -123,16 +123,18 @@ test("edited demo requests use a request-derived simulation instead of canned cl
   ];
 
   for (const editedRequest of requests) {
-    const script = createDemoScript(editedRequest, createDemoPlan(editedRequest));
+    const script = createDemoScript(editedRequest);
     const transcriptText = script.map((turn) => turn.text).join(" ");
 
     assert.match(transcriptText, new RegExp(editedRequest.goal.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
-    assert.match(transcriptText, /SIM-2048/);
+    assert.match(transcriptText, /no commitment was made/i);
+    assert.doesNotMatch(transcriptText, /SIM-2048|Done\. The reference/i);
+    assert.equal(script.some((turn) => Boolean(turn.approvalGate)), false);
     assert.doesNotMatch(transcriptText, /Maya|WSL-2481|quiet room available from 2:00 to 4:00/i);
   }
 });
 
-test("generic demo confirmation requires both user approval and the person answering", () => {
+test("edited informational demos ignore synthetic approvals and references", () => {
   const editedRequest = {
     ...presetRequest("westside-library"),
     goal: "Ask whether curbside pickup is available Friday afternoon",
@@ -144,41 +146,30 @@ test("generic demo confirmation requires both user approval and the person answe
     text: "Approved: Complete the requested next step",
   };
 
-  const withoutPersonConfirmation = createDemoOutcome(editedRequest, [approval]);
-  assert.match(withoutPersonConfirmation.headline, /completion not confirmed/i);
-  assert.equal(withoutPersonConfirmation.referenceNumber, null);
-
-  const withoutUserApproval = createDemoOutcome(editedRequest, [
-    { id: "business", speaker: "business", text: "The requested next step is confirmed. The simulation reference is SIM-2048." },
-  ]);
-  assert.match(withoutUserApproval.headline, /no commitment confirmed/i);
-  assert.equal(withoutUserApproval.referenceNumber, null);
-
-  const confirmed = createDemoOutcome(editedRequest, [
-    approval,
-    { id: "business", speaker: "business", text: "The requested next step is confirmed. The simulation reference is SIM-2048." },
-  ]);
-  assert.match(confirmed.headline, /requested next step confirmed/i);
-  assert.equal(confirmed.referenceNumber, "SIM-2048");
-  assert.match(confirmed.summary, /curbside pickup/i);
+  for (const transcript of [
+    [approval],
+    [{ id: "business", speaker: "business", text: "Done. The reference is SIM-2048." }],
+    [approval, { id: "business", speaker: "business", text: "Done. The reference is SIM-2048." }],
+  ]) {
+    const outcome = createDemoOutcome(editedRequest, transcript);
+    assert.match(outcome.headline, /no commitment made/i);
+    assert.equal(outcome.referenceNumber, null);
+    assert.match(outcome.summary, /curbside pickup/i);
+  }
 });
 
-test("an ended call preserves an action already confirmed in the transcript", () => {
-  const editedRequest = {
-    ...presetRequest("westside-library"),
-    goal: "Ask whether curbside pickup is available Friday afternoon",
-    facts: "Pickup window: Friday afternoon",
-  };
+test("an ended specialized call preserves an action already confirmed in the transcript", () => {
+  const libraryRequest = presetRequest("westside-library");
   const outcome = createDemoOutcome(
-    editedRequest,
+    libraryRequest,
     [
-      { id: "approval", speaker: "user", text: "Approved: Complete the requested next step" },
-      { id: "business", speaker: "business", text: "Done. The reference is SIM-2048." },
+      { id: "approval", speaker: "user", text: "Approved: Reserve the room Tuesday from 2:00 to 4:00 PM" },
+      { id: "business", speaker: "business", text: "It’s reserved. The confirmation number is WSL-2481." },
     ],
     "partial",
   );
 
   assert.match(outcome.headline, /confirmed before the call ended/i);
-  assert.equal(outcome.referenceNumber, "SIM-2048");
+  assert.equal(outcome.referenceNumber, "WSL-2481");
   assert.doesNotMatch(outcome.summary, /no commitment/i);
 });

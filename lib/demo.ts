@@ -4,24 +4,7 @@ import type {
   CallRequest,
   TranscriptTurn,
 } from "./contracts";
-
-const SPECIALIZED_DEMO_PRESETS: Record<string, { goal: string; facts: string }> = {
-  "westside-library": {
-    goal: "Reserve a quiet study room next Tuesday at 2:00 PM for two people",
-    facts: "Preferred time: Tuesday at 2:00 PM\nTwo people\nName to use: Maya",
-  },
-  "lakeside-center": {
-    goal: "Check the Tuesday evening beginner pottery class and register if it fits",
-    facts: "Preferred class: Tuesday beginner pottery at 6:30 PM\nStep-free entrance needed\nName to use: Maya",
-  },
-};
-
-function requestMatchesSpecializedDemo(request: CallRequest): boolean {
-  const preset = SPECIALIZED_DEMO_PRESETS[request.destinationId];
-  return Boolean(
-    preset && request.goal === preset.goal && request.facts === preset.facts,
-  );
-}
+import { demoRequestMatchesPreset } from "./safety.ts";
 
 export type DemoScriptTurn = Omit<TranscriptTurn, "id"> & {
   approvalGate?: string;
@@ -29,7 +12,6 @@ export type DemoScriptTurn = Omit<TranscriptTurn, "id"> & {
 
 function genericRequestScript(
   request: CallRequest,
-  plan: CallPlan | null,
 ): DemoScriptTurn[] {
   const factSummary = request.facts
     .split("\n")
@@ -39,25 +21,20 @@ function genericRequestScript(
   const requestDetails = factSummary
     ? ` Here are the details I may share: ${factSummary}.`
     : "";
-  const approvalGate = plan?.approvalGates[0] ?? "Complete the requested next step";
-
   return [
     { speaker: "agent", text: "Hi, I’m SayAhead’s AI accessibility assistant. I’m helping the user follow this call with live captions. May I continue with live transcription and keep a temporary text transcript for them to review afterward?" },
     { speaker: "business", text: "Yes, that’s okay. How can I help?" },
     { speaker: "agent", text: `Thanks. The user asked me to help with this: ${request.goal}.${requestDetails}` },
-    { speaker: "business", text: "I can help with that. I have what I need to complete the next step. Should I go ahead?", approvalGate },
-    { speaker: "agent", text: "The user approved the next step. Please go ahead within the limits they set." },
-    { speaker: "business", text: "Done. The reference is SIM-2048." },
-    { speaker: "agent", text: "Thanks. I’ll pass that confirmation along. Goodbye." },
+    { speaker: "business", text: "I understand the request and the details you shared. I don’t have a confirmed answer or completed action to report." },
+    { speaker: "agent", text: "Thanks. I’ll tell the user that no commitment was made and that the request still needs follow-up. Goodbye." },
   ];
 }
 
 export function createDemoScript(
   request: CallRequest,
-  plan: CallPlan | null,
 ): DemoScriptTurn[] {
-  if (!requestMatchesSpecializedDemo(request)) {
-    return genericRequestScript(request, plan);
+  if (!demoRequestMatchesPreset(request)) {
+    return genericRequestScript(request);
   }
 
   if (request.destinationId === "lakeside-center") {
@@ -131,7 +108,7 @@ export function createDemoOutcome(
   transcript: TranscriptTurn[],
   status: CallOutcome["status"] = "completed",
 ): CallOutcome {
-  const specializedDemo = requestMatchesSpecializedDemo(request);
+  const specializedDemo = demoRequestMatchesPreset(request);
   const userApproved = transcript.some(
     (turn) => turn.speaker === "user" && /^approved:/i.test(turn.text),
   );
@@ -143,12 +120,10 @@ export function createDemoOutcome(
       )?.[1] ?? null,
     )
     .find((reference): reference is string => Boolean(reference)) ?? null;
-  const expectedReferencePrefix = specializedDemo
-    ? request.destinationId === "lakeside-center"
-      ? "LCC-"
-      : "WSL-"
-    : "SIM-";
-  const confirmedReference = referenceNumber?.startsWith(expectedReferencePrefix)
+  const expectedReferencePrefix = request.destinationId === "lakeside-center"
+    ? "LCC-"
+    : "WSL-";
+  const confirmedReference = specializedDemo && referenceNumber?.startsWith(expectedReferencePrefix)
     ? referenceNumber
     : null;
   const personConfirmed = Boolean(
@@ -158,7 +133,7 @@ export function createDemoOutcome(
         /\b(all set|confirmed|reserved|registered|completed?|done)\b/i.test(turn.text),
     ),
   );
-  const actionConfirmed = userApproved && personConfirmed;
+  const actionConfirmed = specializedDemo && userApproved && personConfirmed;
 
   if (status !== "completed") {
     return {
@@ -179,7 +154,7 @@ export function createDemoOutcome(
     };
   }
 
-  if (userApproved && !actionConfirmed) {
+  if (specializedDemo && userApproved && !actionConfirmed) {
     return {
       status,
       headline: "Action approved—completion not confirmed",
@@ -216,16 +191,18 @@ export function createDemoOutcome(
   if (!specializedDemo) {
     return {
       status,
-      headline: actionConfirmed ? "Requested next step confirmed" : "Simulation complete—no commitment confirmed",
-      summary: `The simulated call to ${request.destinationName} followed the submitted goal—${request.goal}. ${actionConfirmed ? "The user approved the next step, and the person answering confirmed it." : "The transcript does not show both user approval and confirmation from the person answering."}`,
-      confirmed: actionConfirmed
-        ? ["The person answering confirmed the user-approved next step."]
-        : ["No completed commitment was confirmed."],
-      unresolved: actionConfirmed ? [] : ["Whether the requested next step was completed."],
-      nextSteps: actionConfirmed
-        ? ["Keep the confirmation details for reference."]
-        : ["Review the transcript and decide whether to follow up."],
-      referenceNumber: actionConfirmed ? confirmedReference : null,
+      headline: "Information request reviewed—no commitment made",
+      summary: `The edited demo call to ${request.destinationName} relayed the submitted goal—${request.goal}—and stayed within the approved details. The simulation did not invent a real-world answer or complete an action.`,
+      confirmed: [
+        "The approved goal and details were relayed to the person answering.",
+        "No reservation, appointment, registration, cancellation, or other commitment was completed.",
+      ],
+      unresolved: [
+        "The real-world answer to the request.",
+        "Whether follow-up is needed.",
+      ],
+      nextSteps: [`Follow up with ${request.destinationName} to get a real-world answer or complete a supported action.`],
+      referenceNumber: null,
       mode: "demo",
     };
   }
