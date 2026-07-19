@@ -1,5 +1,5 @@
 01-title
-For many Deaf and hard-of-hearing people, a simple phone-only task can become a barrier. Call Assist makes the conversation readable and controllable.
+This demo uses an AI-generated narration voice. For many Deaf and hard-of-hearing people, a simple phone-only task can become a barrier. Call Assist makes the conversation readable and controllable.
 
 02-product
 It is a supervised, text-first calling copilot. The user sets the destination, goal, facts that may be shared, and hard boundaries. The assistant handles the conversation, but the user keeps final control.

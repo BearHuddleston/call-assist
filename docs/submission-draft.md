@@ -28,7 +28,7 @@ Call Assist is a supervised, text-first calling copilot for low-risk calls. The 
 
 GPT-5.6 Sol turns that request into a structured, reviewable call plan: an opening disclosure, conversation path, success criteria, approval gates, and stop conditions. During the conversation, large two-speaker captions separate the business from the assistant. The user can pause, type something for Call Assist to say, correct a detail, resume, decline a commitment, or end the call. Call Assist identifies itself as an AI accessibility assistant and asks for consent before live transcription and temporary text review. It stops for explicit approval before any supported no-payment reservation, appointment, registration, or cancellation.
 
-After the call, GPT-5.6 can structure the result into confirmed details, a reference number, unresolved questions, next actions, and a transcript the user can review. No audio is recorded. The review text stays in the current browser tab and can be cleared explicitly.
+After the call, GPT-5.6 can structure the result into confirmed details, a reference number, unresolved questions, and next actions. The complete transcript remains available separately for the user to review. No audio is recorded. The review text stays in the current browser tab and can be cleared explicitly.
 
 The public build defaults to a deterministic, judge-safe simulation that needs no account or credentials. A separate credential-gated live path is implemented for consented, allowlisted destinations using Twilio outbound calling and OpenAI Realtime.
 
@@ -44,7 +44,7 @@ Server-side screening blocks emergency calls, payments, telemarketing, bulk outr
 
 I collaborated with Codex throughout the project, from product scoping to implementation and verification. Codex helped translate the accessibility goal into safety boundaries and stable event contracts; scaffold and refine the React interface, API routes, schemas, prompts, Fastify service, and Twilio/OpenAI bridge; add accessibility and transcript-retention behavior; diagnose live-call issues; and build the deterministic demo and automated test coverage. It repeatedly ran type checks, linting, unit tests, production builds, rendered-page checks, and media QA while I reviewed the product behavior and made the final decisions.
 
-The key human decisions were to keep the first release low risk, defer dynamic IVR/DTMF, require an opening disclosure and transcription consent, retain transcripts only in the current tab, stop before commitments, and keep a credential-free public simulation. After live testing showed the conversation felt pressuring, I directed a prompt change: the assistant now synthesizes context, makes tentative low-risk inferences, asks at most two substantive clarification questions, and explains that it is helping a Deaf person use captions.
+The key human decisions were to keep the first release low risk, defer dynamic IVR/DTMF, require an opening disclosure and transcription consent, retain transcripts only in the current tab, stop before commitments, and keep a credential-free public simulation. After live testing showed the conversation felt pressuring, I directed a prompt change: the assistant now synthesizes context, makes tentative low-risk inferences, asks at most two substantive clarification questions, and explains its accessibility role and that the user is following through live captions. It names the user as Deaf or hard of hearing only when the user has explicitly included that identity in the approved facts.
 
 GPT-5.6 is meaningful in two ways: it powered the Codex collaboration used to build the project, and GPT-5.6 Sol is integrated at runtime to produce reviewable call plans and structured post-call outcomes when credentials are configured.
 
@@ -89,7 +89,7 @@ Devpost accepts up to 25 tags. Proposed tags:
 
 - Working project: https://call-assist-accessible-calls.bearhuddleston.chatgpt.site/
 - Source repository: https://github.com/BearHuddleston/call-assist
-- Demo video: https://youtu.be/sNnt9y9wiq8
+- Demo video: https://youtu.be/nhh0-V-DEPc
 
 ## Judge-only testing instructions
 

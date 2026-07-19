@@ -15,7 +15,7 @@ Deadline: July 21, 2026 at 5:00 PM Pacific.
 
 ## Demo
 
-- [x] Record and upload a narrated 2:38 YouTube demo
+- [x] Record and upload a narrated 2:52 YouTube demo
 - [x] Show setup, plan review, large captions, pause/correction, approval, and outcome
 - [x] Mention the AI/accessibility disclosure, affirmative transcription consent, no recording, and low-risk scope
 - [x] Keep the deterministic simulation available without credentials

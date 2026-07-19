@@ -3,7 +3,7 @@
 ## Try the demo
 
 - **Judge-safe web app:** [open Call Assist](https://call-assist-accessible-calls.bearhuddleston.chatgpt.site/) — no account, API key, phone number, or telephony credentials required
-- **2:38 walkthrough:** [watch on YouTube](https://youtu.be/sNnt9y9wiq8) — Unlisted; anyone with the URL can watch
+- **2:52 walkthrough:** [watch on YouTube](https://youtu.be/nhh0-V-DEPc) — Unlisted; anyone with the URL can watch
 - **Source code:** [view the public repository](https://github.com/BearHuddleston/call-assist)
 
 The public deployment opens in a deterministic supervised simulation so judges can test the complete experience safely in a browser.
@@ -45,7 +45,7 @@ The safe demo is the recommended judging path. It depicts the same browser contr
 
 Call Assist was created during the July 2026 Build Week submission period in Codex with GPT-5.6. The repository history shows the project progressing from a product brief to the judge-safe app, the live telephony bridge, user-experience refinements, and the final demo.
 
-Codex accelerated the work by scaffolding and iterating on the React interface, defining shared call contracts, implementing server-side safety checks, connecting the Fastify/Twilio/OpenAI Realtime path, writing regression and rendered-page tests, investigating model choices, and producing the repeatable demo-video pipeline and documentation. Codex also helped test each milestone and turn observed call friction into focused changes.
+Codex accelerated the work by scaffolding and iterating on the React interface, defining shared call contracts, implementing server-side safety checks, connecting the Fastify/Twilio/OpenAI Realtime path, writing regression and rendered-page tests, investigating model choices, and preparing editable demo-video rendering sources and documentation. The video source is not a self-contained reproducible build: it requires separately captured local product frames and an unpinned local media environment, as documented in the [demo storyboard](submission/call-assist-demo/storyboard.md). Codex also helped test each milestone and turn observed call friction into focused changes.
 
 The human product and design decisions remained explicit throughout:
 

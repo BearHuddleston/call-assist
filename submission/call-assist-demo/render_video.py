@@ -1,18 +1,22 @@
 #!/usr/bin/env python3
 """Render the Call Assist Build Week demo from captured product states.
 
-The renderer deliberately uses the real public demo UI, local macOS narration,
-and an isolated MoviePy/FFmpeg environment. It does not place a phone call or
-upload anything.
+The renderer deliberately uses the real public demo UI, OpenAI-generated
+narration, and an isolated MoviePy/FFmpeg environment. It does not place a
+phone call or upload anything.
 """
 
 from __future__ import annotations
 
+import base64
 import hashlib
+import json
 import math
 import os
 import re
-import subprocess
+import time
+import urllib.error
+import urllib.request
 from pathlib import Path
 from typing import Dict, List, Sequence, Tuple
 
@@ -33,9 +37,19 @@ OUTPUT = ROOT / "output"
 WIDTH = 1920
 HEIGHT = 1080
 FPS = 24
-VOICE = "Samantha"
-VOICE_RATE = 170
 TAIL_SECONDS = 0.35
+
+AUDIO_ENDPOINT = "https://api.openai.com/v1/chat/completions"
+AUDIO_MODEL = os.environ.get("CALL_ASSIST_NARRATION_MODEL", "gpt-audio-1.5")
+AUDIO_VOICE = os.environ.get("CALL_ASSIST_NARRATION_VOICE", "marin")
+AUDIO_INSTRUCTIONS = (
+    "You are a verbatim narration engine, not an assistant responding to the script. Speak every word "
+    "between <approved_script> and </approved_script> exactly once. Never answer its content. Never add "
+    "a preamble, commentary, or closing. Use a warm, clear, empathetic, confident tone and a moderately "
+    "brisk natural cadence. Keep technical names precise, avoid exaggerated emotion, and leave only "
+    "short pauses between sentences."
+)
+AUDIO_REQUEST = "Read the approved script verbatim now."
 
 NAVY = "#121D35"
 BLUE = "#2864D7"
@@ -182,10 +196,12 @@ SCENES: List[Dict[str, object]] = [
     {
         "id": "01-title",
         "narration": (
-            "For many Deaf and hard-of-hearing people, a simple phone-only task can become a barrier. "
+            "This demo uses an AI-generated narration voice. For many Deaf and hard-of-hearing people, "
+            "a simple phone-only task can become a barrier. "
             "Call Assist makes the conversation readable and controllable."
         ),
         "visuals": ["title-card.png"],
+        "badge": "AI-GENERATED NARRATION · PRODUCT DEMO",
     },
     {
         "id": "02-product",
@@ -588,16 +604,101 @@ def srt_timestamp(seconds: float) -> str:
     return f"{hours:02d}:{minutes:02d}:{secs:02d},{milliseconds:03d}"
 
 
-def generate_audio(scene: Dict[str, object]) -> Path:
-    scene_id = str(scene["id"])
-    audio_path = AUDIO / f"{scene_id}.aiff"
-    text_path = AUDIO / f"{scene_id}.txt"
-    speech = str(scene.get("speech", scene["narration"]))
-    text_path.write_text(speech + "\n", encoding="utf-8")
-    subprocess.run(
-        ["/usr/bin/say", "-v", VOICE, "-r", str(VOICE_RATE), "-f", str(text_path), "-o", str(audio_path)],
-        check=True,
+def openai_api_key() -> str:
+    configured = os.environ.get("OPENAI_API_KEY", "").strip()
+    if configured:
+        return configured
+
+    env_path = ROOT.parent.parent / ".env.local"
+    if env_path.exists():
+        for raw_line in env_path.read_text(encoding="utf-8").splitlines():
+            line = raw_line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            name, value = line.split("=", 1)
+            if name.strip() == "OPENAI_API_KEY":
+                configured = value.strip().strip('"').strip("'")
+                if configured:
+                    return configured
+
+    raise RuntimeError(
+        "OPENAI_API_KEY is required to render narration. Export it or configure it in the repository .env.local."
     )
+
+
+def generate_audio(scene: Dict[str, object], api_key: str) -> Path:
+    scene_id = str(scene["id"])
+    speech = str(scene.get("speech", scene["narration"]))
+    settings_hash = hashlib.sha256(
+        json.dumps(
+            {
+                "model": AUDIO_MODEL,
+                "voice": AUDIO_VOICE,
+                "instructions": AUDIO_INSTRUCTIONS,
+                "request": AUDIO_REQUEST,
+                "speech": speech,
+            },
+            sort_keys=True,
+        ).encode("utf-8")
+    ).hexdigest()[:12]
+    audio_path = AUDIO / f"{scene_id}-openai-{settings_hash}.wav"
+    text_path = AUDIO / f"{scene_id}.txt"
+    text_path.write_text(speech + "\n", encoding="utf-8")
+
+    if audio_path.exists():
+        return audio_path
+
+    payload = json.dumps(
+        {
+            "model": AUDIO_MODEL,
+            "modalities": ["text", "audio"],
+            "audio": {"voice": AUDIO_VOICE, "format": "wav"},
+            "messages": [
+                {
+                    "role": "developer",
+                    "content": f"{AUDIO_INSTRUCTIONS}\n\n<approved_script>\n{speech}\n</approved_script>",
+                },
+                {"role": "user", "content": AUDIO_REQUEST},
+            ],
+            "store": False,
+        }
+    ).encode("utf-8")
+    request = urllib.request.Request(
+        AUDIO_ENDPOINT,
+        data=payload,
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        },
+        method="POST",
+    )
+    for attempt in range(3):
+        try:
+            with urllib.request.urlopen(request, timeout=180) as response:
+                result = json.loads(response.read().decode("utf-8"))
+            audio = result["choices"][0]["message"]["audio"]
+            transcript = str(audio.get("transcript", ""))
+            normalize = lambda value: re.sub(r"\s+", " ", value.strip())
+            if normalize(transcript) != normalize(speech):
+                raise RuntimeError(
+                    f"OpenAI narration transcript mismatch for {scene_id}; refusing to render captions out of sync."
+                )
+            audio_path.write_bytes(base64.b64decode(audio["data"], validate=True))
+            break
+        except urllib.error.HTTPError as error:
+            detail = error.read().decode("utf-8", errors="replace")
+            if error.code in {408, 409, 429, 500, 502, 503, 504} and attempt < 2:
+                time.sleep(2**attempt)
+                continue
+            raise RuntimeError(
+                f"OpenAI speech generation failed for {scene_id}: HTTP {error.code}: {detail}"
+            ) from error
+        except urllib.error.URLError as error:
+            if attempt < 2:
+                time.sleep(2**attempt)
+                continue
+            raise RuntimeError(f"OpenAI speech generation failed for {scene_id}: {error.reason}") from error
+
     return audio_path
 
 
@@ -610,6 +711,7 @@ def render() -> None:
     for directory in (AUDIO, GENERATED, OUTPUT):
         directory.mkdir(parents=True, exist_ok=True)
     prepare_cards()
+    api_key = openai_api_key()
 
     narration_lines: List[str] = []
     srt_entries: List[str] = []
@@ -621,7 +723,7 @@ def render() -> None:
         scene_id = str(scene["id"])
         narration = str(scene["narration"])
         narration_lines.append(f"{scene_id}\n{narration}\n")
-        audio_path = generate_audio(scene)
+        audio_path = generate_audio(scene, api_key)
         audio_clip = AudioFileClip(str(audio_path))
         duration = float(audio_clip.duration) + TAIL_SECONDS
         captions = caption_schedule(narration, duration)
@@ -670,7 +772,14 @@ def render() -> None:
         audio_bitrate="192k",
         preset="medium",
         threads=4,
-        ffmpeg_params=["-pix_fmt", "yuv420p", "-movflags", "+faststart"],
+        ffmpeg_params=[
+            "-pix_fmt",
+            "yuv420p",
+            "-af",
+            "loudnorm=I=-16:LRA=7:TP=-1.5",
+            "-movflags",
+            "+faststart",
+        ],
         logger="bar",
     )
     print(f"Final duration: {global_cursor:.2f}s")
