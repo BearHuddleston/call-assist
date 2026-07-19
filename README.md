@@ -3,7 +3,7 @@
 ## Try the demo
 
 - **Judge-safe web app:** [open Call Assist](https://call-assist-accessible-calls.bearhuddleston.chatgpt.site/) — no account, API key, phone number, or telephony credentials required
-- **2:52 walkthrough:** [watch on YouTube](https://youtu.be/nhh0-V-DEPc) — Unlisted; anyone with the URL can watch
+- **2:52 walkthrough:** [watch on YouTube](https://youtu.be/nhh0-V-DEPc) — Public and accessible without authentication
 - **Source code:** [view the public repository](https://github.com/BearHuddleston/call-assist)
 
 The public deployment opens in a deterministic supervised simulation so judges can test the complete experience safely in a browser.

@@ -72,5 +72,5 @@ The script generates the title and end cards, narration audio, burned-in caption
 - Accessibility: spoken and visual AI-narration disclosure, burned-in narration captions, and 46 matching cues in `output/call-assist-demo.srt` ending at `00:02:51,850`
 - Technical QA: full video/audio decode completed without warnings or errors
 - SHA-256: `81770ccb28670730fdf92cda44fb9a8582d03636a255b8016219c1876949ddd7`
-- Publication state: uploaded to YouTube as **Unlisted**; anyone with the URL can watch
+- Publication state: uploaded to YouTube as **Public** and accessible without authentication
 - Video URL: https://youtu.be/nhh0-V-DEPc

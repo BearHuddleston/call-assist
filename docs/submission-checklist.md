@@ -19,7 +19,7 @@ Deadline: July 21, 2026 at 5:00 PM Pacific.
 - [x] Show setup, plan review, large captions, pause/correction, approval, and outcome
 - [x] Mention the AI/accessibility disclosure, affirmative transcription consent, no recording, and low-risk scope
 - [x] Keep the deterministic simulation available without credentials
-- [ ] Resolve video-visibility exception: it is intentionally Unlisted and accessible by URL, while the official rules request Public visibility
+- [x] Publish the final replacement video publicly, as required by the official rules
 
 ## Submission form
 
@@ -28,5 +28,8 @@ Deadline: July 21, 2026 at 5:00 PM Pacific.
 - [x] YouTube URL ready and accessible without authentication
 - [ ] Add the `/feedback` session ID from the task where most core functionality was built
 - [ ] Confirm the temporary product name or choose the final name
-- [ ] Complete the Devpost project description and testing instructions
+- [ ] Select the submitter type and country of residence, and confirm the solo/team status
+- [x] Complete the Devpost project description and testing instructions
+- [ ] Review the final Devpost preview in the entrant's own voice
+- [ ] Accept the Official Rules and Devpost Terms of Service
 - [ ] Submit before July 21, 2026 at 5:00 PM Pacific and retain a confirmation screenshot
