@@ -1,6 +1,6 @@
 export type PlanningExperience = "checking" | "ai" | "demo";
 
-export const DEMO_PLAN_PHASE_DURATION_MS = 1_000;
+export const DEMO_PLAN_PHASE_DURATION_MS = 1_500;
 
 export const DEMO_PLAN_PHASES = [
   "Reviewing the call goal and approved facts",

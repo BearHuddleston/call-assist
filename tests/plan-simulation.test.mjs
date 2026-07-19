@@ -6,8 +6,8 @@ import {
   planningStatusMessage,
 } from "../lib/plan-simulation.ts";
 
-test("demo planning presents four visible one-second GPT-5.6 simulation phases", () => {
-  assert.equal(DEMO_PLAN_PHASE_DURATION_MS, 1_000);
+test("demo planning presents four visible 1.5-second GPT-5.6 simulation phases", () => {
+  assert.equal(DEMO_PLAN_PHASE_DURATION_MS, 1_500);
   assert.equal(DEMO_PLAN_PHASES.length, 4);
   for (const [index, phase] of DEMO_PLAN_PHASES.entries()) {
     const message = planningStatusMessage("demo", index, index);
