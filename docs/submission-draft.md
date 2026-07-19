@@ -104,6 +104,6 @@ This path is a deterministic simulation and places no phone call; no audio is re
 - Submitter type: **TODO — Individual, Team of Individuals, or Organization**
 - Country of residence: **TODO**
 - Solo/team confirmation: **TODO**
-- Video visibility: **Unlisted by creator choice; accessible by URL. Official rules request Public visibility, so this remains a known exception.**
+- Video visibility: **Public and accessible without authentication.**
 - Official Rules and Devpost Terms acceptance: **USER ACTION REQUIRED at final submission**
 - Final submission and confirmation screenshot: **TODO**
