@@ -52,7 +52,7 @@ The live UI adapter remains deliberately gated from the default scripted demo. I
 
 OpenAI announced GPT‑Live on July 8, 2026. GPT‑Live‑1 and GPT‑Live‑1 mini are currently documented for ChatGPT Voice; OpenAI says API access is coming soon, but as of July 18 it has not published a GPT‑Live API model ID, endpoint contract, pricing, or rate limits.
 
-Call Assist will keep the documented `gpt-realtime-2.1` API for the July 21 Build Week demo. That integration is already tested with the Twilio Media Streams bridge, captions, interruption handling, tools, and supervisor approvals. Changing models this close to the deadline would add undocumented availability and transport risk without improving the judge-visible core workflow.
+SayAhead will keep the documented `gpt-realtime-2.1` API for the July 21 Build Week demo. That integration is already tested with the Twilio Media Streams bridge, captions, interruption handling, tools, and supervisor approvals. Changing models this close to the deadline would add undocumented availability and transport risk without improving the judge-visible core workflow.
 
 The browser-facing call contracts remain provider-neutral. Treat Realtime session construction inside the telephony service as the adapter seam, and evaluate GPT‑Live only after OpenAI publishes its API contract. Before migrating, re-test telephone audio, latency, interruptions, captions, consent, transcript handling, tool approvals, pricing, and rate limits.
 
@@ -68,7 +68,7 @@ Sources: [Introducing GPT‑Live](https://openai.com/index/introducing-gpt-live/
 - Structured approvals limited to explicit user gates for no-payment reservations, appointments, registrations, and cancellations
 - Runtime rejection for prices, payments, purchases, deposits, subscriptions, sensitive disclosures, and actions without a matching user gate
 - Immediate stop on declined consent, unsupported risk, or a user hang-up
-- Call Assist does not enable provider recording or persist audio; Realtime history audio storage is disabled
+- SayAhead does not enable provider recording or persist audio; Realtime history audio storage is disabled
 
 ## Service lifecycle
 

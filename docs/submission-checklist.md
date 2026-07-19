@@ -15,19 +15,19 @@ Deadline: July 21, 2026 at 5:00 PM Pacific.
 
 ## Demo
 
-- [x] Record and upload a narrated 2:52 YouTube demo
+- [x] Record and verify a narrated 2:58 SayAhead demo
 - [x] Show setup, plan review, large captions, pause/correction, approval, and outcome
 - [x] Mention the AI/accessibility disclosure, clear transcription consent, no audio recording, and low-risk scope
 - [x] Keep the deterministic simulation available without credentials
-- [x] Publish the final replacement video publicly, as required by the official rules
+- [ ] Publish the final SayAhead replacement video publicly, as required by the official rules
 
 ## Submission form
 
 - [x] Public GitHub repository URL ready
 - [x] Deployed judge-access URL ready
-- [x] YouTube URL ready and accessible without authentication
+- [ ] New SayAhead YouTube URL ready and accessible without authentication
 - [x] Add the `/feedback` session ID from the task where most core functionality was built
-- [x] Confirm **Call Assist** as the final project name
+- [x] Confirm **SayAhead** as the final project name
 - [x] Save the submitter type (**Individual**), country (**United States**), and solo status
 - [x] Complete the Devpost project description and testing instructions
 - [ ] Review the final Devpost preview in the entrant's own voice

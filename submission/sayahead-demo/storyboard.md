@@ -1,6 +1,6 @@
-# Call Assist Build Week demo
+# SayAhead Build Week demo
 
-Target: a narrated, captioned, judge-safe product walkthrough under three minutes.
+Target: a narrated, captioned public product walkthrough under three minutes.
 
 ## Story arc
 
@@ -8,14 +8,14 @@ Target: a narrated, captioned, judge-safe product walkthrough under three minute
 2. Show the supervised setup: destination, goal, approved facts, boundaries, and low-risk confirmation.
 3. Preserve the visible four-phase GPT-5.6 planning simulation and explain the configured Responses API path.
 4. Review the disclosure, conversation path, success criteria, and approval gate.
-5. Label the call clearly as a judge-safe simulation and note that the live Twilio/OpenAI Realtime path is separately implemented and tested.
+5. Label the call clearly as a public demo simulation and note that the live Twilio/OpenAI Realtime path is separately implemented and tested.
 6. Show large two-speaker captions, pause, typed correction, resume, and explicit approval.
 7. Show the structured outcome, confirmation number, privacy explanation, and retained transcript.
 8. Close with the Codex, GPT-5.6 Sol, OpenAI Realtime, and Twilio stack plus the public URLs.
 
 ## Production choices
 
-- Product screenshots were captured manually from the public deployment at a 1080p-class viewport. The local capture files are intentionally ignored by Git.
+- Product screenshots were captured manually from the local credential-free demo at a 1080p-class viewport. The local capture files are intentionally ignored by Git.
 - Narration is generated with OpenAI `gpt-audio-1.5` and the built-in `marin` voice; no microphone or room audio is captured. The opening provides both spoken and visual AI-voice disclosure.
 - The renderer compares the returned audio transcript with the approved scene script and fails rather than rendering captions against changed wording.
 - Burned-in narration captions plus a matching `.srt` file.
@@ -56,7 +56,7 @@ To create a local render with the current script, provide:
 21-transcript-review.png
 ```
 
-From `submission/call-assist-demo/`, run:
+From `submission/sayahead-demo/`, run:
 
 ```bash
 python render_video.py
@@ -66,11 +66,11 @@ The script generates the title and end cards, narration audio, burned-in caption
 
 ## Verified review cut
 
-- Runtime: **2:51.85**
+- Runtime: **2:58.20**
 - Video: **1920×1080**, H.264 High, 24 fps, progressive `yuv420p`
-- Audio: OpenAI `gpt-audio-1.5` with the built-in `marin` voice, encoded as AAC stereo at approximately 192 kb/s; integrated loudness **−15.9 LUFS**, true peak **−1.4 dBFS**
-- Accessibility: spoken and visual AI-narration disclosure, burned-in narration captions, and 46 matching cues in `output/call-assist-demo.srt` ending at `00:02:51,850`
+- Audio: OpenAI `gpt-audio-1.5` with the built-in `marin` voice, encoded as AAC stereo at 96 kHz; integrated loudness **−16.06 LUFS**, true peak **−1.48 dBFS**
+- Accessibility: spoken and visual AI-narration disclosure, burned-in narration captions, and **47** matching cues in `output/sayahead-demo.srt`, ending at **00:02:58,100**
 - Technical QA: full video/audio decode completed without warnings or errors
-- SHA-256: `81770ccb28670730fdf92cda44fb9a8582d03636a255b8016219c1876949ddd7`
-- Publication state: uploaded to YouTube as **Public** and accessible without authentication
-- Video URL: https://youtu.be/nhh0-V-DEPc
+- SHA-256: `44894e88fd858a5d5e25ee06d5133b343e84f92b5209bc92972b8de84922d910`
+- Publication state: ready for a new **Public** YouTube upload; publication is pending
+- Video URL: pending new upload

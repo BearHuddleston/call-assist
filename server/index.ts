@@ -434,7 +434,7 @@ app.get("/twilio/media/:callId", { websocket: true }, (socket, request) => {
   });
 
   const agent = new RealtimeAgent({
-    name: "Call Assist",
+    name: "SayAhead assistant",
     voice: process.env.OPENAI_REALTIME_VOICE ?? "marin",
     instructions,
     tools: [approvalTool, endCallTool],

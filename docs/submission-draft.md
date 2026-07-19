@@ -4,7 +4,7 @@ Use this as working copy for the Devpost form. Review and rephrase the project s
 
 ## Project overview
 
-**Project name:** Call Assist
+**Project name:** SayAhead
 
 **Elevator pitch:** Phone calls you can read, guide, and control—a supervised calling assistant for Deaf and hard-of-hearing people.
 
@@ -12,7 +12,7 @@ The pitch is under Devpost's 200-character limit.
 
 **Category:** Apps for Your Life
 
-**Optional thumbnail:** `public/og.png` is available at 1672×941 and 1.92 MB. Devpost recommends a 3:2 image, so crop it before uploading rather than stretching it.
+**Optional thumbnail:** `public/og.png` is available at 1672×941 and 1.81 MB. Devpost recommends a 3:2 image, so crop it before uploading rather than stretching it.
 
 ## About the project
 
@@ -20,17 +20,17 @@ The pitch is under Devpost's 200-character limit.
 
 An ordinary errand can stop at the words “please call us.” For a Deaf or hard-of-hearing person, a transcript solves only part of the problem. The call is still unpredictable, private details may come up, and interrupting without speaking is awkward.
 
-I built Call Assist to handle the speaking while keeping the user in charge of what is said, shared, and agreed to.
+I built SayAhead to handle the speaking while keeping the user in charge of what is said, shared, and agreed to.
 
 ### What it does
 
-Call Assist is a supervised, text-first assistant for low-risk phone calls. Before the call, the user enters the destination, goal, approved facts, and rules Call Assist must follow. They also confirm that the request is a low-risk call the product supports.
+SayAhead is a supervised, text-first assistant for low-risk phone calls. Before the call, the user enters the destination, goal, approved facts, and rules SayAhead must follow. They also confirm that the request is a low-risk call the product supports.
 
-When OpenAI credentials are configured, GPT-5.6 Sol turns that request into a plan the user can review: the opening disclosure, conversation path, success criteria, approval points, and conditions for stopping. During a live call, large two-speaker captions separate the person answering from Call Assist. The user can pause, type something for the assistant to say, correct a detail, resume, decline a commitment, or end the call.
+When OpenAI credentials are configured, GPT-5.6 Sol turns that request into a plan the user can review: the opening disclosure, conversation path, success criteria, approval points, and conditions for stopping. During a live call, large two-speaker captions separate the person answering from the SayAhead assistant. The user can pause, type something for the assistant to say, correct a detail, resume, decline a commitment, or end the call.
 
-Call Assist identifies itself as an AI accessibility assistant and asks permission to continue with live transcription and keep a temporary review transcript before discussing the request. It describes the user as Deaf or hard of hearing only when the user has explicitly approved sharing that fact. It also stops before any supported reservation, appointment, registration, or cancellation that does not involve payment. The assistant may do the talking, but it does not get a blank check.
+SayAhead’s AI accessibility assistant identifies itself and asks permission to continue with live transcription and keep a temporary review transcript before discussing the request. It describes the user as Deaf or hard of hearing only when the user has explicitly approved sharing that fact. It also stops before any supported reservation, appointment, registration, or cancellation that does not involve payment. The assistant may do the talking, but it does not get a blank check.
 
-Afterward, GPT-5.6 can turn the conversation into confirmed details, a reference number, unresolved questions, and next steps. The user's review copy remains available in the current browser tab and can be cleared. Call Assist does not record or store audio.
+Afterward, GPT-5.6 can turn the conversation into confirmed details, a reference number, unresolved questions, and next steps. The user's review copy remains available in the current browser tab and can be cleared. SayAhead does not record or store audio.
 
 The public version is a transparent, deterministic simulation that requires no account or credentials and places no phone call. The private live path uses Twilio and OpenAI Realtime for consented, allowlisted destinations.
 
@@ -56,11 +56,11 @@ Connecting Twilio and OpenAI Realtime without exposing credentials or raw audio 
 
 The harder product problem was finding the right balance between initiative and control. An assistant that never asks is reckless; one that asks about everything is exhausting. Live testing pushed the design toward tentative inference, fewer questions, visible correction controls, and explicit approval points.
 
-Privacy created one more constraint: the transcript needed to remain useful after the call without becoming a permanent record. Call Assist records no audio. It processes the temporary transcript once to create the outcome, deletes the calling service's caption copy after the outcome or when it expires, and keeps the user's review copy in the current tab until it is cleared, the tab is refreshed or closed, or another call begins.
+Privacy created one more constraint: the transcript needed to remain useful after the call without becoming a permanent record. SayAhead records no audio. It processes the temporary transcript once to create the outcome, deletes the calling service's caption copy after the outcome or when it expires, and keeps the user's review copy in the current tab until it is cleared, the tab is refreshed or closed, or another call begins.
 
 ### Accomplishments
 
-Call Assist now has a complete supervised flow: accessible setup, visible planning, plan review, large captions, typed intervention, pause and correction controls, approval points, and a structured outcome with transcript review.
+SayAhead now has a complete supervised flow: accessible setup, visible planning, plan review, large captions, typed intervention, pause and correction controls, approval points, and a structured outcome with transcript review.
 
 The private path connects Twilio telephony to OpenAI Realtime. The public demo gives judges the same plan, captions, controls, approvals, and outcome flow without exposing credentials or calling a real person. Judges need no login.
 
@@ -100,8 +100,8 @@ Devpost accepts up to 25 tags. Proposed tags:
 ## Try it out
 
 - Working project: https://call-assist-accessible-calls.bearhuddleston.chatgpt.site/
-- Source repository: https://github.com/BearHuddleston/call-assist
-- Demo video: https://youtu.be/nhh0-V-DEPc
+- Source repository: https://github.com/BearHuddleston/sayahead
+- Demo video: pending new public SayAhead upload
 
 ## Judge-only testing instructions
 
@@ -110,18 +110,18 @@ No account or credentials are required.
 1. Open the public demo; the library-room request is already filled in.
 2. Confirm that it is a low-risk call, then select **Create call plan** and watch the four planning phases.
 3. Review the disclosure, conversation path, confirmation goals, and approval point. Select **Start simulated call**.
-4. Follow the Call Assist and Person answering captions. Pause the assistant, type guidance or choose **Correct a detail**, then resume.
+4. Follow the **SayAhead assistant** and **Person answering** captions. Pause the assistant, type guidance or choose **Correct a detail**, then resume.
 5. Approve the no-cost room reservation when prompted. Review the result, reference number, next step, and transcript, then choose **Clear from this tab**.
 
-This path is a deterministic simulation and places no phone call. Call Assist does not record or store audio. The live Twilio/OpenAI Realtime path is private, credential-gated, and allowlisted.
+This path is a deterministic simulation and places no phone call. SayAhead does not record or store audio. The live Twilio/OpenAI Realtime path is private, credential-gated, and allowlisted.
 
 ## Submission form status
 
 - `/feedback` Codex Session ID: **Entered in Devpost**
-- Final project-name confirmation: **Call Assist**
+- Final project-name confirmation: **SayAhead**
 - Submitter type: **Individual**
 - Country of residence: **United States**
 - Solo/team confirmation: **Solo submission**
-- Video visibility: **Public and accessible without authentication.**
+- Video visibility: **New SayAhead upload pending.**
 - Official Rules and Devpost Terms acceptance: **USER ACTION REQUIRED at final submission**
 - Final submission and confirmation screenshot: **TODO**

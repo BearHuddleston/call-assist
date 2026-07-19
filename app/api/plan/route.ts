@@ -44,7 +44,7 @@ export async function POST(request: Request) {
       reasoning: { effort: PLANNING_REASONING_EFFORT },
       max_output_tokens: PLAN_MAX_OUTPUT_TOKENS,
       store: false,
-      safety_identifier: "call-assist-build-week-demo",
+      safety_identifier: "sayahead-build-week-demo",
       instructions: CALL_PLAN_INSTRUCTIONS,
       input: JSON.stringify(parsed.data),
       text: {

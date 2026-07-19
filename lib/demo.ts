@@ -42,7 +42,7 @@ function genericRequestScript(
   const approvalGate = plan?.approvalGates[0] ?? "Complete the requested next step";
 
   return [
-    { speaker: "agent", text: "Hi, I’m Call Assist, an AI accessibility assistant. I’m helping the user follow this call with live captions. May I continue with live transcription and keep a temporary text transcript for their review afterward?" },
+    { speaker: "agent", text: "Hi, I’m SayAhead’s AI accessibility assistant. I’m helping the user follow this call with live captions. May I continue with live transcription and keep a temporary text transcript for them to review afterward?" },
     { speaker: "business", text: "Yes, that’s okay. How can I help?" },
     { speaker: "agent", text: `Thanks. The user asked me to help with this: ${request.goal}.${requestDetails}` },
     { speaker: "business", text: "I can help with that. I have what I need to complete the next step. Should I go ahead?", approvalGate },
@@ -62,7 +62,7 @@ export function createDemoScript(
 
   if (request.destinationId === "lakeside-center") {
     return [
-      { speaker: "agent", text: "Hi, I’m Call Assist, an AI accessibility assistant helping Maya follow this call with live captions. May I continue with live transcription and keep a temporary text transcript for her to review afterward?" },
+      { speaker: "agent", text: "Hi, I’m SayAhead’s AI accessibility assistant, helping Maya follow this call with live captions. May I continue with live transcription and keep a temporary text transcript for her to review afterward?" },
       { speaker: "business", text: "Yes, that’s okay. How can I help?" },
       { speaker: "agent", text: "Thanks. Maya is checking whether the Tuesday evening beginner pottery class still has space." },
       { speaker: "business", text: "There are two spaces left. The class begins Tuesday at 6:30 PM and materials are included." },
@@ -75,7 +75,7 @@ export function createDemoScript(
   }
 
   return [
-    { speaker: "agent", text: "Hi, I’m Call Assist, an AI accessibility assistant helping Maya follow this call with live captions. May I continue with live transcription and keep a temporary text transcript for her to review afterward?" },
+    { speaker: "agent", text: "Hi, I’m SayAhead’s AI accessibility assistant, helping Maya follow this call with live captions. May I continue with live transcription and keep a temporary text transcript for her to review afterward?" },
     { speaker: "business", text: "Yes, that’s fine. How can I help today?" },
     { speaker: "agent", text: "Thanks. Maya needs a quiet study room next Tuesday at 2:00 PM for two people." },
     { speaker: "business", text: "Let me check. We have a quiet room available from 2:00 to 4:00 PM." },
@@ -102,14 +102,14 @@ export function createDemoPlan(request: CallRequest): CallPlan {
   return {
     destination: request.destinationName,
     objective: request.goal,
-    openingScript: "Hi, I’m Call Assist, an AI accessibility assistant. I’m helping someone follow this call with live captions. May I continue with live transcription and keep a temporary text transcript for their review afterward?",
+    openingScript: "Hi, I’m SayAhead’s AI accessibility assistant. I’m helping someone follow this call with live captions. May I continue with live transcription and keep a temporary text transcript for them to review afterward?",
     successCriteria: [
       "The person answering consents to live transcription and temporary post-call text review.",
       "The goal-critical information is confirmed without unnecessary questions.",
       "No commitment is made without the user’s explicit approval.",
     ],
     conversationPath: [
-      { label: "Introduce Call Assist", detail: "Explain the accessibility role and ask one clear question for transcription consent." },
+      { label: "Introduce the assistant", detail: "Name SayAhead, explain the accessibility role, and ask one clear question for transcription consent." },
       { label: "Lead with what is known", detail: "State the goal and approved facts before asking the representative for anything." },
       { label: "Work out the next step", detail: "Offer the likely next step tentatively, then ask only one essential question if needed." },
       { label: "Pause, confirm, and close", detail: "Stop before a commitment, read back the confirmed details, and end once the goal is met." },
@@ -198,7 +198,7 @@ export function createDemoOutcome(
       headline: actionConfirmed
         ? "Pottery class registration confirmed"
         : "Pottery class details confirmed—no registration made",
-      summary: `The call to ${request.destinationName} confirmed two spaces remain in Tuesday’s 6:30 PM beginner pottery class. ${actionConfirmed ? "Maya approved the free registration, and the community center confirmed it." : "Call Assist made no commitment."}`,
+      summary: `The call to ${request.destinationName} confirmed two spaces remain in Tuesday’s 6:30 PM beginner pottery class. ${actionConfirmed ? "Maya approved the free registration, and the community center confirmed it." : "The assistant made no commitment."}`,
       confirmed: [
         "Two spaces remain in Tuesday’s 6:30 PM beginner pottery class.",
         "Materials are included, and the north entrance is step-free.",
@@ -235,7 +235,7 @@ export function createDemoOutcome(
     headline: actionConfirmed
       ? "Room held for Tuesday at 2:00 PM"
       : "Availability confirmed—no reservation made",
-    summary: `The call to ${request.destinationName} confirmed a quiet study room is available Tuesday at 2:00 PM. ${actionConfirmed ? "Maya approved the no-cost reservation, and the library confirmed it." : "Call Assist made no commitment."}`,
+    summary: `The call to ${request.destinationName} confirmed a quiet study room is available Tuesday at 2:00 PM. ${actionConfirmed ? "Maya approved the no-cost reservation, and the library confirmed it." : "The assistant made no commitment."}`,
     confirmed: [
       "A quiet study room is available Tuesday at 2:00 PM.",
       "The room can be held for two hours at no cost.",

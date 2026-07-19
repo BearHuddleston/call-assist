@@ -49,7 +49,7 @@ const boundaryOptions = [
 ] as const;
 
 function speakerLabel(speaker: TranscriptTurn["speaker"]): string {
-  if (speaker === "agent") return "Call Assist";
+  if (speaker === "agent") return "SayAhead assistant";
   if (speaker === "business") return "Person answering";
   if (speaker === "user") return "You";
   return "Call status";
@@ -83,7 +83,7 @@ function transcriptPrivacyCopy(hasCaptions: boolean, mode: CallMode | null): str
     : "The review copy is gone from this tab.";
 
   if (mode === "live") {
-    return `${browserCopy} The calling service deletes its temporary caption copy after the outcome or when it expires. Call Assist does not record or store audio.`;
+    return `${browserCopy} The calling service deletes its temporary caption copy after the outcome or when it expires. SayAhead does not record or store audio.`;
   }
 
   return `${browserCopy} The simulation creates no phone audio and no transcript outside this tab.`;
@@ -504,7 +504,7 @@ export default function Home() {
       {
         id: "system-connected",
         speaker: "system",
-        text: "Starting the simulation. No phone call is placed, and Call Assist records no audio.",
+        text: "Starting the simulation. No phone call is placed, and SayAhead records no audio.",
       },
     ];
     setCaptions(initialCaptions);
@@ -542,7 +542,7 @@ export default function Home() {
       const initialCaptions: TranscriptTurn[] = [{
         id: "system-live-starting",
         speaker: "system",
-        text: "Live call requested. Call Assist does not record or store audio. Captions stay in this tab until you clear them or leave.",
+        text: "Live call requested. SayAhead does not record or store audio. Captions stay in this tab until you clear them or leave.",
       }];
       setCaptions(initialCaptions);
       captionsRef.current = initialCaptions;
@@ -701,11 +701,11 @@ export default function Home() {
     <main className="app-shell">
       <a className="skip-link" href="#main-content">Skip to main content</a>
       <header className="topbar">
-        <div className="brand-lockup" aria-label="Call Assist">
-          <span className="brand-mark" aria-hidden="true"><span>CA</span></span>
+        <div className="brand-lockup" aria-label="SayAhead">
+          <span className="brand-mark" aria-hidden="true"><span>SA</span></span>
           <span>
-            <strong>Call Assist</strong>
-            <small>Calls you can read and control</small>
+            <strong>SayAhead</strong>
+            <small>Phone calls you can read, guide, and control</small>
           </span>
         </div>
         <div className={`demo-badge ${liveAvailability === "ready" ? "live-ready" : ""}`}>
@@ -743,13 +743,13 @@ export default function Home() {
             <div className="intro-panel">
               <p className="eyebrow">A calling assistant you supervise</p>
               <h1 id="setup-heading">What do you need this call to get done?</h1>
-              <p className="lede">You choose the goal and limits. Call Assist handles the talking while you read along and step in whenever you want.</p>
+              <p className="lede">You choose the goal and limits. SayAhead handles the talking while you read along and step in whenever you want.</p>
               <div className="promise-list" aria-label="Your controls">
                 <div><span aria-hidden="true">1</span><p><strong>Review first</strong><br />Read the plan before anyone’s phone rings.</p></div>
                 <div><span aria-hidden="true">2</span><p><strong>Stay in control</strong><br />Pause, fix a detail, type what to say, or end the call anytime.</p></div>
-                <div><span aria-hidden="true">3</span><p><strong>Approve commitments</strong><br />Call Assist stops before it books, registers, schedules, or cancels anything.</p></div>
+                <div><span aria-hidden="true">3</span><p><strong>Approve commitments</strong><br />SayAhead stops before it books, registers, schedules, or cancels anything.</p></div>
               </div>
-              <div className="privacy-note"><span aria-hidden="true">●</span><p><strong>Call Assist records no audio</strong><br />Captions stay in this tab after the call, ready to review or clear.</p></div>
+              <div className="privacy-note"><span aria-hidden="true">●</span><p><strong>SayAhead records no audio</strong><br />Captions stay in this tab after the call, ready to review or clear.</p></div>
             </div>
 
             <form className="setup-card" onSubmit={handlePlan} aria-busy={loading}>
@@ -822,13 +822,13 @@ export default function Home() {
               </div>
 
               <div className="field-group">
-                <label htmlFor="facts">Facts Call Assist may share</label>
+                <label htmlFor="facts">Facts SayAhead may share</label>
                 <textarea id="facts" rows={4} value={facts} onChange={(event) => setFacts(event.target.value)} disabled={loading} />
-                <p className="field-hint">Put one fact on each line and include only what the call needs. Call Assist will mention that you’re Deaf or hard of hearing only if you write it here.</p>
+                <p className="field-hint">Put one fact on each line and include only what the call needs. SayAhead will mention that you’re Deaf or hard of hearing only if you write it here.</p>
               </div>
 
               <fieldset className="boundary-fieldset">
-                <legend>Rules Call Assist must follow</legend>
+                <legend>Rules SayAhead must follow</legend>
                 {boundaryOptions.map((boundary) => (
                   <label className="check-row" key={boundary}>
                     <input type="checkbox" checked={boundaries.includes(boundary)} onChange={() => toggleBoundary(boundary)} disabled={loading} />
@@ -904,7 +904,7 @@ export default function Home() {
 
               <article className="plan-card approval-card">
                 <div className="card-kicker">Decisions that stay with you</div>
-                <h2>Call Assist will pause before:</h2>
+                <h2>SayAhead will pause before:</h2>
                 <ul className="shield-list">
                   {plan.approvalGates.map((item) => <li key={item}><span aria-hidden="true">◆</span>{item}</li>)}
                 </ul>
@@ -953,7 +953,7 @@ export default function Home() {
 
             <div className="call-grid">
               <div className="caption-panel">
-                <div className="caption-toolbar"><div><span className="speaker-key agent-key" /> Call Assist <span className="speaker-key business-key" /> Person answering</div><span>{callMode === "live" ? "Live captions" : "Simulated captions"}</span></div>
+                <div className="caption-toolbar"><div><span className="speaker-key agent-key" /> SayAhead assistant <span className="speaker-key business-key" /> Person answering</div><span>{callMode === "live" ? "Live captions" : "Simulated captions"}</span></div>
                 <div className="caption-stream" aria-live="polite" aria-relevant="additions text">
                   {captions.map((turn) => (
                     <article className={`caption ${turn.speaker}`} key={turn.id}>
@@ -979,22 +979,22 @@ export default function Home() {
                   </div>
                 ) : (
                   <>
-                    <div className="control-intro"><p className="eyebrow">You’re in control</p><h2>{paused ? "Call Assist is paused." : "Call Assist is handling the conversation."}</h2><p>{paused ? "Type a correction or resume when you’re ready." : "Jump in at any moment without speaking."}</p></div>
+                    <div className="control-intro"><p className="eyebrow">You’re in control</p><h2>{paused ? "SayAhead is paused." : "SayAhead is handling the conversation."}</h2><p>{paused ? "Type a correction or resume when you’re ready." : "Jump in at any moment without speaking."}</p></div>
                     <button className={`pause-button ${paused ? "resume" : ""}`} type="button" onClick={() => void togglePause()} disabled={commandPending || callStatus === "ending"}>
-                      <span aria-hidden="true">{paused ? "▶" : "Ⅱ"}</span>{paused ? "Resume Call Assist" : "Pause Call Assist"}
+                      <span aria-hidden="true">{paused ? "▶" : "Ⅱ"}</span>{paused ? "Resume SayAhead" : "Pause SayAhead"}
                     </button>
                     <button className="correction-button" type="button" onClick={() => void beginCorrection()} disabled={commandPending || callStatus === "ending"}><span aria-hidden="true">✎</span> Correct a detail</button>
                   </>
                 )}
 
                 <form className={`guidance-box ${correctionMode ? "correction" : ""}`} onSubmit={sendGuidance}>
-                  <label htmlFor="guidance">{correctionMode ? "Type the correction" : "Type what Call Assist should say"}</label>
+                  <label htmlFor="guidance">{correctionMode ? "Type the correction" : "Type what SayAhead should say"}</label>
                   <div><input ref={guidanceRef} id="guidance" value={guidance} onChange={(event) => setGuidance(event.target.value)} placeholder={correctionMode ? "My name is spelled…" : "Could you also ask…"} disabled={Boolean(pendingApproval) || callStatus === "ending"} /><button type="submit" disabled={!guidance.trim() || commandPending || Boolean(pendingApproval) || callStatus === "ending"} aria-label="Send typed guidance">↑</button></div>
-                  <small>{correctionMode ? "The call stays paused until you resume it." : "Call Assist will say this at the next natural pause."}</small>
+                  <small>{correctionMode ? "The call stays paused until you resume it." : "SayAhead will say this at the next natural pause."}</small>
                 </form>
 
-                <div className="call-safety"><span aria-hidden="true">●</span><p><strong>Call Assist does not record audio</strong><br />{callMode === "live" ? "Call audio streams through Twilio and OpenAI, but Call Assist does not store it. Captions stay in this tab after the outcome until you clear them or leave." : "The simulation places no phone call. Captions stay in this tab after the outcome until you clear them or leave."}</p></div>
-                {approvedDecision && <p className="approved-note" role="status">✓ Approved. Call Assist can continue.</p>}
+                <div className="call-safety"><span aria-hidden="true">●</span><p><strong>SayAhead does not record audio</strong><br />{callMode === "live" ? "Call audio streams through Twilio and OpenAI, but SayAhead does not store it. Captions stay in this tab after the outcome until you clear them or leave." : "The simulation places no phone call. Captions stay in this tab after the outcome until you clear them or leave."}</p></div>
+                {approvedDecision && <p className="approved-note" role="status">✓ Approved. SayAhead can continue.</p>}
               </aside>
             </div>
           </section>

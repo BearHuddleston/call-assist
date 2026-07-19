@@ -2,7 +2,7 @@
 
 ## Product thesis
 
-People who are Deaf or hard of hearing should be able to complete ordinary phone-only tasks without surrendering control or depending on audio. Call Assist turns a user-approved goal into a supervised phone conversation with live captions and clear decision points.
+People who are Deaf or hard of hearing should be able to complete ordinary phone-only tasks without surrendering control or depending on audio. SayAhead turns a user-approved goal into a supervised phone conversation with live captions and clear decision points.
 
 ## First-release scope
 
@@ -30,5 +30,5 @@ A call works like this:
 - No emergency calls, telemarketing, bulk outreach, payments, or high-stakes healthcare/financial transactions
 - Accurate caller ID and an opening AI/accessibility disclosure
 - Clear consent before the conversation moves to the user's request with live transcription and temporary post-call text review
-- Call Assist does not record or store audio; the post-call review copy stays only in the current browser tab and can be cleared explicitly
+- SayAhead does not record or store audio; the post-call review copy stays only in the current browser tab and can be cleared explicitly
 - Prominent user-controlled hang-up and approval controls

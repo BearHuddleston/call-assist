@@ -68,7 +68,7 @@ export function screenCallRequest(
   const textToScreen = `${request.goal}\n${request.facts}`;
 
   if (!allowlist.has(normalized)) {
-    reasons.push("That phone number is not approved for this Call Assist demo.");
+    reasons.push("That phone number is not approved for this SayAhead demo.");
   }
 
   for (const topic of blockedTopics) {

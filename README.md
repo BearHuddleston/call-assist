@@ -1,18 +1,18 @@
 <p align="center">
   <a href="https://call-assist-accessible-calls.bearhuddleston.chatgpt.site/">
-    <img src="public/og.png" alt="Call Assist — calls you can read and control" width="100%">
+    <img src="public/og.png" alt="SayAhead — phone calls you can read, guide, and control" width="100%">
   </a>
 </p>
 
-<h1 align="center">Call Assist</h1>
+<h1 align="center">SayAhead</h1>
 
 <p align="center">
-  <strong>A supervised, text-first calling assistant for Deaf and hard-of-hearing people.</strong><br>
-  Plan the call, follow large live captions, guide the assistant without speaking, and approve every commitment.
+  <strong>Phone calls you can read, guide, and control.</strong><br>
+  A supervised, text-first calling assistant for Deaf and hard-of-hearing people. Plan the call, read large live captions, type what the assistant should say, and approve before it commits to anything.
 </p>
 
 <p align="center">
-  <a href="https://call-assist-accessible-calls.bearhuddleston.chatgpt.site/"><img src="https://img.shields.io/badge/Try_the_demo-Open-2563EB?style=for-the-badge" alt="Open the Call Assist demo"></a>
+  <a href="https://call-assist-accessible-calls.bearhuddleston.chatgpt.site/"><img src="https://img.shields.io/badge/Try_the_demo-Open-2563EB?style=for-the-badge" alt="Open the SayAhead demo"></a>
   <a href="https://youtu.be/nhh0-V-DEPc"><img src="https://img.shields.io/badge/Watch_the_demo-2%3A52-0F172A?style=for-the-badge" alt="Watch the 2 minute 52 second demo"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-15803D?style=for-the-badge" alt="MIT License"></a>
 </p>
@@ -21,7 +21,7 @@
   OpenAI Build Week · Apps for Your Life · GPT-5.6 Sol · OpenAI Realtime · Twilio
 </p>
 
-Many businesses still require a phone call for ordinary tasks. Call Assist lets the user decide the goal, what the assistant may share, and where it must stop. It creates a plan for review, handles the conversation with large two-speaker captions, and asks before making a supported reservation, appointment, registration, or cancellation.
+Many businesses still require a phone call for ordinary tasks. SayAhead lets the user decide the goal, what the assistant may share, and where it must stop. It creates a plan for review, handles the conversation with large two-speaker captions, and asks before the assistant makes a supported reservation, appointment, registration, or cancellation.
 
 > **The public demo needs no credentials.** It uses a clearly labeled simulation, so no librarian receives a surprise demo call. The private, allowlisted path uses Twilio and OpenAI Realtime for real outbound calls.
 
@@ -30,24 +30,24 @@ Many businesses still require a phone call for ordinary tasks. Call Assist lets 
 <table>
   <tr>
     <td width="50%" valign="top">
-      <a href="docs/images/readme/plan-review.jpg"><img src="docs/images/readme/plan-review.jpg" alt="Call Assist plan review showing the objective, disclosure, conversation path, success criteria, and approval gate"></a>
+      <a href="docs/images/readme/plan-review.jpg"><img src="docs/images/readme/plan-review.jpg" alt="SayAhead plan review showing the objective, disclosure, conversation path, success criteria, and approval gate"></a>
       <br><strong>1. Review before anything happens</strong><br>
       With credentials, GPT-5.6 Sol creates a plan limited by the user's facts and rules. The clearly labeled demo uses the same plan format.
     </td>
     <td width="50%" valign="top">
-      <a href="docs/images/readme/live-correction.jpg"><img src="docs/images/readme/live-correction.jpg" alt="Paused Call Assist conversation with large captions and a typed name correction"></a>
+      <a href="docs/images/readme/live-correction.jpg"><img src="docs/images/readme/live-correction.jpg" alt="Paused SayAhead conversation with large captions and a typed name correction"></a>
       <br><strong>2. Follow and correct the conversation</strong><br>
-      Large captions separate Call Assist from the person answering. The user can pause, correct a detail, type what to say, resume, or end the call.
+      Large captions separate the SayAhead assistant from the person answering. The user can pause, correct a detail, type what to say, resume, or end the call.
     </td>
   </tr>
   <tr>
     <td width="50%" valign="top">
-      <a href="docs/images/readme/approval-gate.jpg"><img src="docs/images/readme/approval-gate.jpg" alt="Call Assist approval gate asking before committing to a no-cost room reservation"></a>
+      <a href="docs/images/readme/approval-gate.jpg"><img src="docs/images/readme/approval-gate.jpg" alt="SayAhead approval gate asking before committing to a no-cost room reservation"></a>
       <br><strong>3. Approve every commitment</strong><br>
       The assistant pauses before any supported commitment. It can ask; only the user can say yes.
     </td>
     <td width="50%" valign="top">
-      <a href="docs/images/readme/outcome.jpg"><img src="docs/images/readme/outcome.jpg" alt="Call Assist outcome showing a confirmed room, reference number, next action, and transcript privacy notice"></a>
+      <a href="docs/images/readme/outcome.jpg"><img src="docs/images/readme/outcome.jpg" alt="SayAhead outcome showing a confirmed room, reference number, next action, and transcript privacy notice"></a>
       <br><strong>4. Review the result and transcript</strong><br>
       The outcome shows confirmed details, a reference number, unanswered questions, and next steps. GPT-5.6 creates it when configured, and the transcript stays available in the current tab for review.
     </td>
@@ -61,24 +61,24 @@ You can test the full flow in about 90 seconds:
 1. Open the [public demo](https://call-assist-accessible-calls.bearhuddleston.chatgpt.site/); the library-room request is prefilled.
 2. Confirm the request is low risk, then choose **Create call plan** and watch the four visible planning phases.
 3. Review the disclosure, conversation path, success criteria, and approval point, then choose **Start simulated call**.
-4. Follow the two-speaker captions. Pause Call Assist, enter a correction or typed instruction, and resume.
+4. Follow the two-speaker captions. Pause the SayAhead assistant, enter a correction or typed instruction, and resume.
 5. Approve the no-cost reservation only when prompted, then review the structured outcome and transcript. Finish with **Clear from this tab**.
 
 Both paths use the same plan and outcome formats, along with the same pause, correction, and approval controls. The demo simply skips the real phone call.
 
 ## Safety and privacy boundaries
 
-| The user stays in control | Call Assist stays inside the boundary |
+| The user stays in control | The SayAhead assistant stays inside the boundary |
 | --- | --- |
 | Reviews the plan before starting | User-initiated, allowlisted, low-risk calls only |
 | Sees an AI/accessibility disclosure and transcription-consent request | No emergency calls, telemarketing, bulk outreach, payments, or high-stakes medical/financial transactions |
 | Can pause, correct, type guidance, decline, or hang up | No dynamic IVR/DTMF navigation in this MVP |
 | Must approve supported commitments | No commitment outside the reviewed goal and approval gates |
-| Can review and explicitly clear the transcript | Call Assist does not record or store audio; the review copy stays in the current browser tab and is not saved to an account or database |
+| Can review and explicitly clear the transcript | SayAhead does not record or store audio; the review copy stays in the current browser tab and is not saved to an account or database |
 
 ## Built with Codex and GPT-5.6
 
-I built Call Assist in Codex with GPT-5.6 during the July 2026 Build Week submission period. Codex helped me scaffold and refine the React interface, define shared call contracts, implement safety checks, connect Fastify, Twilio, and OpenAI Realtime, write tests, diagnose live-call friction, and prepare the public demo.
+I built SayAhead in Codex with GPT-5.6 during the July 2026 Build Week submission period. Codex helped me scaffold and refine the React interface, define shared call contracts, implement safety checks, connect Fastify, Twilio, and OpenAI Realtime, write tests, diagnose live-call friction, and prepare the public demo.
 
 Codex wrote and tested a lot of code. I still made the product calls:
 
@@ -163,8 +163,8 @@ The current suite covers structured contracts, safety screening, prompt behavior
 - [Architecture and voice-model decision](docs/architecture.md)
 - [Live-call runbook](docs/live-call-runbook.md)
 - [Build Week submission checklist](docs/submission-checklist.md)
-- [Demo storyboard and media QA](submission/call-assist-demo/storyboard.md)
+- [Demo storyboard and media QA](submission/sayahead-demo/storyboard.md)
 
 ## License
 
-Call Assist is available under the [MIT License](LICENSE). Third-party dependencies and services retain their respective licenses and terms.
+SayAhead is available under the [MIT License](LICENSE). Third-party dependencies and services retain their respective licenses and terms.
