@@ -134,6 +134,27 @@ test("edited demo requests use a request-derived simulation instead of canned cl
   }
 });
 
+test("preset simulations cannot commit without a reviewed approval gate", () => {
+  const libraryRequest = {
+    ...presetRequest("westside-library"),
+    boundaries: ["Do not share my address", "Do not agree to payments"],
+  };
+  const plan = createDemoPlan(libraryRequest);
+  assert.deepEqual(plan.approvalGates, []);
+
+  const script = createDemoScript(libraryRequest, plan);
+  const transcriptText = script.map((turn) => turn.text).join(" ");
+
+  assert.equal(script.some((turn) => Boolean(turn.approvalGate)), false);
+  assert.match(transcriptText, /No reservation was made/i);
+  assert.doesNotMatch(transcriptText, /WSL-2481|Maya approved the reservation|It’s reserved/i);
+
+  const transcript = script.map((turn, index) => ({ ...turn, id: `turn-${index}` }));
+  const outcome = createDemoOutcome(libraryRequest, transcript);
+  assert.match(outcome.headline, /no reservation made/i);
+  assert.equal(outcome.referenceNumber, null);
+});
+
 test("edited informational demos ignore synthetic approvals and references", () => {
   const editedRequest = {
     ...presetRequest("westside-library"),

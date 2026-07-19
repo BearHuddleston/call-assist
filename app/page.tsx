@@ -181,8 +181,8 @@ export default function Home() {
     ? livePhoneNumber.trim()
     : selectedDestination.phoneNumber;
   const script = useMemo(
-    () => activeRequest ? createDemoScript(activeRequest) : [],
-    [activeRequest],
+    () => activeRequest ? createDemoScript(activeRequest, plan) : [],
+    [activeRequest, plan],
   );
   const activeStep = steps.findIndex((step) => step.id === stage);
 

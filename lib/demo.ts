@@ -10,6 +10,14 @@ export type DemoScriptTurn = Omit<TranscriptTurn, "id"> & {
   approvalGate?: string;
 };
 
+function hasReviewedCommitmentGate(plan: CallPlan | null): boolean {
+  return Boolean(
+    plan?.approvalGates.some((gate) =>
+      /\b(?:reserv\w*|appoint\w*|register\w*|registration|cancel\w*)\b/i.test(gate),
+    ),
+  );
+}
+
 function genericRequestScript(
   request: CallRequest,
 ): DemoScriptTurn[] {
@@ -32,18 +40,33 @@ function genericRequestScript(
 
 export function createDemoScript(
   request: CallRequest,
+  plan: CallPlan | null = null,
 ): DemoScriptTurn[] {
   if (!demoRequestMatchesPreset(request)) {
     return genericRequestScript(request);
   }
 
+  const mayCommit = hasReviewedCommitmentGate(plan);
+
   if (request.destinationId === "lakeside-center") {
-    return [
+    const informationTurns: DemoScriptTurn[] = [
       { speaker: "agent", text: "Hi, I’m SayAhead’s AI accessibility assistant, helping Maya follow this call with live captions. May I continue with live transcription and keep a temporary text transcript for her to review afterward?" },
       { speaker: "business", text: "Yes, that’s okay. How can I help?" },
       { speaker: "agent", text: "Thanks. Maya is checking whether the Tuesday evening beginner pottery class still has space." },
       { speaker: "business", text: "There are two spaces left. The class begins Tuesday at 6:30 PM and materials are included." },
       { speaker: "agent", text: "Good to know. Is the studio entrance step-free?" },
+    ];
+
+    if (!mayCommit) {
+      return [
+        ...informationTurns,
+        { speaker: "business", text: "Yes. The north entrance is step-free, and registration is available at no cost if Maya decides to follow up." },
+        { speaker: "agent", text: "Thanks. I’ll share the availability and entrance details. No registration was made. Goodbye." },
+      ];
+    }
+
+    return [
+      ...informationTurns,
       { speaker: "business", text: "Yes. The north entrance is step-free, and registration is available at no cost. I can register Maya now if she’d like.", approvalGate: "Register for the Tuesday pottery class" },
       { speaker: "agent", text: "Maya approved the registration. Please go ahead." },
       { speaker: "business", text: "All set. Her confirmation code is LCC-6318. Please arrive ten minutes early." },
@@ -51,12 +74,24 @@ export function createDemoScript(
     ];
   }
 
-  return [
+  const informationTurns: DemoScriptTurn[] = [
     { speaker: "agent", text: "Hi, I’m SayAhead’s AI accessibility assistant, helping Maya follow this call with live captions. May I continue with live transcription and keep a temporary text transcript for her to review afterward?" },
     { speaker: "business", text: "Yes, that’s fine. How can I help today?" },
     { speaker: "agent", text: "Thanks. Maya needs a quiet study room next Tuesday at 2:00 PM for two people." },
     { speaker: "business", text: "Let me check. We have a quiet room available from 2:00 to 4:00 PM." },
     { speaker: "agent", text: "Great. If Maya reserves it, what should she bring?" },
+  ];
+
+  if (!mayCommit) {
+    return [
+      ...informationTurns,
+      { speaker: "business", text: "There’s no fee. She should bring a library card or photo ID if she decides to follow up." },
+      { speaker: "agent", text: "Thanks. I’ll share the availability and what to bring. No reservation was made. Goodbye." },
+    ];
+  }
+
+  return [
+    ...informationTurns,
     { speaker: "business", text: "There’s no fee. She should bring a library card or photo ID. I can hold the room now.", approvalGate: "Reserve the room Tuesday from 2:00 to 4:00 PM" },
     { speaker: "agent", text: "Maya approved the reservation. Please hold the room." },
     { speaker: "business", text: "It’s reserved. The confirmation number is WSL-2481." },
