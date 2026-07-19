@@ -63,7 +63,7 @@ Sources: [Introducing GPT‑Live](https://openai.com/index/introducing-gpt-live/
 - Model: `gpt-realtime-2.1`
 - Server-to-server WebSocket transport for phone media
 - Medium reasoning effort so the assistant can synthesize answers and choose a low-pressure next step before speaking
-- The opening disclosure and consent question precede the substantive goal. The Realtime transport processes that opening exchange to capture the recipient's answer; no substantive conversation continues unless consent is affirmative.
+- The opening disclosure and consent question come before the assistant discusses the request. The Realtime transport processes that opening exchange so it can receive the answer; the conversation does not move to the request unless the person clearly consents.
 - At most two substantive clarification questions after consent, with tentative synthesis preferred over open-ended interviewing
 - Structured approvals limited to explicit user gates for no-payment reservations, appointments, registrations, and cancellations
 - Runtime rejection for prices, payments, purchases, deposits, subscriptions, sensitive disclosures, and actions without a matching user gate
@@ -72,8 +72,12 @@ Sources: [Introducing GPT‑Live](https://openai.com/index/introducing-gpt-live/
 
 ## Service lifecycle
 
-Call state, final captions, and pending approvals are held in process memory. Completed records are removed after five minutes; abandoned active records expire after thirty minutes. This is suitable for the Build Week supervised demo, not a horizontally scaled production deployment. A production version needs a shared ephemeral event store, idempotent webhook handling, explicit concurrency limits, privacy-reviewed operational logging, and a stable privacy-preserving Realtime safety identifier when the transport supports forwarding it.
+Call state, final captions, and pending approvals are held in process memory. Completed records are removed after five minutes; abandoned active records expire after thirty minutes. That is enough for the supervised Build Week demo, but not for a horizontally scaled production service.
+
+A production version needs a shared ephemeral event store, idempotent webhook handling, explicit concurrency limits, privacy-reviewed operational logging, and a stable privacy-preserving Realtime safety identifier when the transport supports forwarding it.
 
 ## Privacy
 
-The current build keeps the review copy in browser memory during the call and outcome review. The transcript is sent once to the outcome endpoint, with OpenAI storage disabled when the model path is used. After the outcome is created, the browser asks the telephony service to purge caption events and Realtime references from its temporary call record; if that best-effort request fails, the completed record expires after five minutes. The browser review copy disappears when the user clears it, refreshes or closes the tab, or starts another call. Production logging must exclude transcript text and provider audio frames.
+The current build keeps the review copy in browser memory during the call and outcome review. It sends the transcript once to the outcome endpoint, with OpenAI storage disabled when the model path is used.
+
+After the outcome is created, the browser asks the telephony service to delete caption events and Realtime references from its temporary call record. If that request fails, the completed record expires after five minutes. The browser copy disappears when the user clears it, refreshes or closes the tab, or starts another call. Production logging must exclude transcript text and provider audio frames.

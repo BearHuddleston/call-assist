@@ -11,7 +11,7 @@ test("demo planning presents four visible 1.5-second GPT-5.6 simulation phases",
   assert.equal(DEMO_PLAN_PHASES.length, 4);
   for (const [index, phase] of DEMO_PLAN_PHASES.entries()) {
     const message = planningStatusMessage("demo", index, index);
-    assert.match(message, /Demo mode · Simulating GPT-5.6/);
+    assert.match(message, /Demo mode · Showing how GPT-5.6/);
     assert.match(message, new RegExp(phase));
   }
 });

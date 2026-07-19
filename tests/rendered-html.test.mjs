@@ -19,12 +19,12 @@ test("server-renders the Call Assist setup experience", async () => {
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
 
   const html = await response.text();
-  assert.match(html, /<title>Call Assist — supervised calls you can read<\/title>/i);
-  assert.match(html, /Tell us what you need from the call/);
+  assert.match(html, /<title>Call Assist — phone calls you can read and control<\/title>/i);
+  assert.match(html, /What do you need this call to get done/);
   assert.match(html, /Create call plan/);
-  assert.match(html, /No audio recording/);
+  assert.match(html, /Call Assist records no audio/);
   assert.match(html, /Captions stay in this tab after the call/);
-  assert.match(html, /If you want Call Assist to say you are Deaf or hard of hearing/);
+  assert.match(html, /Call Assist will mention that you’re Deaf or hard of hearing only if you write it here/);
   assert.match(html, /user-initiated, low-risk call/);
   assert.doesNotMatch(html, /codex-preview/);
   assert.doesNotMatch(html, /react-loading-skeleton/);

@@ -7,6 +7,8 @@ export const DEMO_DESTINATIONS = [
     phoneNumber: "+13125550147",
     displayNumber: "(312) 555-0147",
     description: "Ask about a room reservation",
+    defaultGoal: "Reserve a quiet study room next Tuesday at 2:00 PM for two people",
+    defaultFacts: "Preferred time: Tuesday at 2:00 PM\nTwo people\nName to use: Maya",
   },
   {
     id: "lakeside-center",
@@ -14,8 +16,22 @@ export const DEMO_DESTINATIONS = [
     phoneNumber: "+13125550119",
     displayNumber: "(312) 555-0119",
     description: "Check class availability",
+    defaultGoal: "Check the Tuesday evening beginner pottery class and register if it fits",
+    defaultFacts: "Preferred class: Tuesday beginner pottery at 6:30 PM\nStep-free entrance needed\nName to use: Maya",
   },
 ] as const;
+
+export function demoRequestMatchesPreset(request: CallRequest): boolean {
+  const preset = DEMO_DESTINATIONS.find(
+    (destination) => destination.id === request.destinationId,
+  );
+
+  return Boolean(
+    preset &&
+      request.goal === preset.defaultGoal &&
+      request.facts === preset.defaultFacts,
+  );
+}
 
 const blockedTopics = [
   { pattern: /\b(911|emergency|urgent medical|suicid|overdose)\b/i, reason: "Emergency calls are not supported." },
@@ -52,7 +68,7 @@ export function screenCallRequest(
   const textToScreen = `${request.goal}\n${request.facts}`;
 
   if (!allowlist.has(normalized)) {
-    reasons.push("This destination is not on the call allowlist.");
+    reasons.push("That phone number is not approved for this Call Assist demo.");
   }
 
   for (const topic of blockedTopics) {
@@ -65,4 +81,3 @@ export function screenCallRequest(
 
   return { allowed: reasons.length === 0, reasons };
 }
-

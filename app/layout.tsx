@@ -23,9 +23,9 @@ export async function generateMetadata(): Promise<Metadata> {
     requestHeaders.get("x-forwarded-proto") ??
     (host.startsWith("localhost") ? "http" : "https");
   const origin = `${protocol}://${host}`;
-  const title = "Call Assist — supervised calls you can read";
+  const title = "Call Assist — phone calls you can read and control";
   const description =
-    "An accessibility-first calling copilot for Deaf and hard-of-hearing people.";
+    "A supervised calling assistant that lets Deaf and hard-of-hearing people read, guide, and control phone conversations.";
   const image = `${origin}/og.png`;
 
   return {

@@ -4,7 +4,7 @@ Deadline: July 21, 2026 at 5:00 PM Pacific.
 
 ## Product and access
 
-- [x] Working judge-safe app with no credentials required
+- [x] Working public demo with no credentials required
 - [x] Meaningful GPT-5.6 planning and structured-outcome path
 - [x] OpenAI Realtime and Twilio live-call path implemented
 - [x] Public source repository with an MIT license and setup instructions
@@ -17,7 +17,7 @@ Deadline: July 21, 2026 at 5:00 PM Pacific.
 
 - [x] Record and upload a narrated 2:52 YouTube demo
 - [x] Show setup, plan review, large captions, pause/correction, approval, and outcome
-- [x] Mention the AI/accessibility disclosure, affirmative transcription consent, no recording, and low-risk scope
+- [x] Mention the AI/accessibility disclosure, clear transcription consent, no audio recording, and low-risk scope
 - [x] Keep the deterministic simulation available without credentials
 - [x] Publish the final replacement video publicly, as required by the official rules
 

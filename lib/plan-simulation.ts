@@ -3,10 +3,10 @@ export type PlanningExperience = "checking" | "ai" | "demo";
 export const DEMO_PLAN_PHASE_DURATION_MS = 1_500;
 
 export const DEMO_PLAN_PHASES = [
-  "Reviewing the call goal and approved facts",
-  "Checking safety boundaries and approval gates",
-  "Designing a low-pressure conversation path",
-  "Preparing the plan for review",
+  "Reading your goal and the facts you approved",
+  "Checking your boundaries and where to pause",
+  "Planning the conversation—without turning it into twenty questions",
+  "Getting the plan ready for you",
 ] as const;
 
 export function planningStatusMessage(
@@ -16,16 +16,16 @@ export function planningStatusMessage(
 ): string {
   if (mode === "demo") {
     const phase = DEMO_PLAN_PHASES[demoPhaseIndex ?? 0] ?? DEMO_PLAN_PHASES[0];
-    return `Demo mode · Simulating GPT-5.6 plan creation: ${phase}…`;
+    return `Demo mode · Showing how GPT-5.6 would build the plan: ${phase}…`;
   }
 
   if (mode === "ai") {
-    if (elapsedSeconds < 8) return "GPT-5.6 is preparing the call plan…";
+    if (elapsedSeconds < 8) return "GPT-5.6 is turning your notes into a call plan…";
     if (elapsedSeconds < 20) {
-      return "Still preparing a concise, low-pressure conversation path…";
+      return "Still working out the shortest useful conversation…";
     }
-    return "This is taking longer than usual. You can keep waiting or cancel without losing your details.";
+    return "The plan is taking the scenic route. Keep waiting or cancel—your details will stay put.";
   }
 
-  return "Preparing the call plan…";
+  return "Getting the call plan ready…";
 }
