@@ -33,10 +33,10 @@ Confirm `GET /health` returns `{"ok":true,"ready":true}`. The response intention
 1. Open the web app and confirm the header says **Live service ready**.
 2. Choose **Allowlisted live destination…** and enter the consented business name and exact allowlisted number.
 3. Create and review the call plan.
-4. Start the supervised live call and watch for ringing, disclosure, and transcription-consent captions.
+4. Start the supervised live call and watch for ringing, disclosure, and consent for live transcription plus temporary post-call text review.
 5. Exercise pause/resume or typed guidance once.
-6. Approve or decline one low-risk commitment only if the business requests it.
-7. End the call and verify the structured outcome appears and captions are cleared.
+6. Approve or decline one reviewed, no-payment reservation, appointment, registration, or cancellation only if the business requests it.
+7. End the call, verify the structured outcome and review transcript appear, then test the explicit **Clear from this tab** control.
 
 ## 4. Stop conditions
 

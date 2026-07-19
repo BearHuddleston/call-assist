@@ -12,9 +12,9 @@ The default interaction is supervised autonomy:
 
 1. The user provides a destination, goal, allowed facts, and boundaries.
 2. GPT-5.6 creates a reviewable call plan and success criteria.
-3. The realtime agent identifies itself as an AI accessibility assistant and requests consent to continue with live transcription.
+3. The realtime agent identifies itself as an AI accessibility assistant and requests consent for live transcription plus a temporary post-call text review copy.
 4. The user follows large two-speaker captions and can type corrections or messages for the agent to say.
-5. Appointments, purchases, cancellations, sensitive disclosures, and other commitments require explicit approval.
+5. No-payment reservations, appointments, registrations, and cancellations require explicit approval. Payments, purchases, subscriptions, deposits, and sensitive disclosures are unsupported.
 6. GPT-5.6 returns a structured outcome, reference numbers, unresolved questions, and next actions.
 
 ## Build-event constraints
@@ -29,7 +29,6 @@ The default interaction is supervised autonomy:
 - User-initiated and allowlisted calls only
 - No emergency calls, telemarketing, bulk outreach, payments, or high-stakes healthcare/financial transactions
 - Accurate caller ID and an opening AI/accessibility disclosure
-- Affirmative consent before live transcription continues
-- No audio recording; transcript retention is ephemeral by default
+- Affirmative consent before live transcription and temporary post-call text review begins
+- No audio recording; the post-call review transcript is ephemeral in the current browser tab and can be cleared explicitly
 - Prominent user-controlled hang-up and approval controls
-

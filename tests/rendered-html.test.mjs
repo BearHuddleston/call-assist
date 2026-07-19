@@ -23,6 +23,8 @@ test("server-renders the Call Assist setup experience", async () => {
   assert.match(html, /Tell us what you need from the call/);
   assert.match(html, /Create call plan/);
   assert.match(html, /No audio recording/);
+  assert.match(html, /Captions stay in this tab after the call/);
+  assert.match(html, /If you want Call Assist to say you are Deaf or hard of hearing/);
   assert.match(html, /user-initiated, low-risk call/);
   assert.doesNotMatch(html, /codex-preview/);
   assert.doesNotMatch(html, /react-loading-skeleton/);
@@ -42,4 +44,12 @@ test("live calling rejects malformed requests before provider access", async () 
   });
   assert.equal(response.status, 400);
   assert.deepEqual(await response.json(), { error: "Invalid live call request." });
+});
+
+test("transcript purge rejects malformed call identifiers before provider access", async () => {
+  const response = await requestWorker("/api/live/not-a-call/transcript", {
+    method: "DELETE",
+  });
+  assert.equal(response.status, 400);
+  assert.deepEqual(await response.json(), { error: "Invalid transcript request." });
 });

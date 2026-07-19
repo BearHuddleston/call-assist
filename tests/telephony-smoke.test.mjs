@@ -64,4 +64,13 @@ test("telephony service is private and fail-closed without provider credentials"
     body: "{}",
   });
   assert.equal(invalid.status, 400);
+
+  const missingTranscript = await fetch(
+    `${baseUrl}/internal/calls/00000000-0000-4000-8000-000000000000/transcript`,
+    {
+      method: "DELETE",
+      headers: { authorization: `Bearer ${token}` },
+    },
+  );
+  assert.equal(missingTranscript.status, 404);
 });

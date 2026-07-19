@@ -11,21 +11,22 @@ export const CallRequestSchema = z.object({
 });
 
 export const CallPlanSchema = z.object({
-  destination: z.string(),
-  objective: z.string(),
-  openingScript: z.string(),
-  successCriteria: z.array(z.string()).min(1),
+  destination: z.string().min(1).max(120),
+  objective: z.string().min(1).max(360),
+  openingScript: z.string().min(1).max(520),
+  successCriteria: z.array(z.string().min(1).max(260)).min(1).max(5),
   conversationPath: z
     .array(
       z.object({
-        label: z.string(),
-        detail: z.string(),
+        label: z.string().min(1).max(90),
+        detail: z.string().min(1).max(360),
       }),
     )
-    .min(2),
-  approvedFacts: z.array(z.string()),
-  approvalGates: z.array(z.string()),
-  stopConditions: z.array(z.string()).min(1),
+    .min(2)
+    .max(5),
+  approvedFacts: z.array(z.string().min(1).max(240)).max(12),
+  approvalGates: z.array(z.string().min(1).max(240)).max(12),
+  stopConditions: z.array(z.string().min(1).max(260)).min(1).max(10),
   mode: z.enum(["ai", "demo"]),
 });
 
@@ -43,7 +44,6 @@ export const CallOutcomeSchema = z.object({
   unresolved: z.array(z.string()),
   nextSteps: z.array(z.string()),
   referenceNumber: z.string().nullable(),
-  transcriptDiscarded: z.boolean(),
   mode: z.enum(["ai", "demo"]),
 });
 

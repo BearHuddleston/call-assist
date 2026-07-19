@@ -12,3 +12,5 @@ export function getOpenAIClient(): OpenAI | null {
 export const PLANNING_MODEL =
   process.env.OPENAI_PLANNING_MODEL ?? "gpt-5.6-sol";
 
+export const PLANNING_REASONING_EFFORT =
+  process.env.OPENAI_PLANNING_REASONING_EFFORT === "medium" ? "medium" : "low";

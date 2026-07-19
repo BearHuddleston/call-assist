@@ -9,6 +9,7 @@ import type {
   TranscriptTurn,
 } from "@/lib/contracts";
 import {
+  CallPlanSchema,
   LiveCallEventsResponseSchema,
   LiveCallStartResponseSchema,
   LiveServiceStatusSchema,
@@ -35,7 +36,7 @@ const steps: Array<{ id: Stage; label: string }> = [
 ];
 
 const boundaryOptions = [
-  "Ask me before making any reservation or commitment.",
+  "Ask me before making any reservation, appointment, registration, or cancellation.",
   "Do not share my date of birth, address, or account credentials.",
   "Do not agree to charges, payments, or purchases.",
 ] as const;
@@ -48,9 +49,9 @@ function scriptedCall(
   if (destinationId === "live-custom" && request) {
     const approvalGate = plan?.approvalGates[0] ?? "Confirm the requested next step";
     return [
-      { speaker: "agent", text: "Hello, I’m an AI accessibility assistant calling for a user who is following with live captions. May we continue with live transcription?" },
+      { speaker: "agent", text: "Hello, I’m Call Assist, an AI accessibility assistant helping someone follow this phone call through live captions. Is it okay to continue with live transcription and keep a temporary text transcript for their review afterward?" },
       { speaker: "business", text: "Yes, that’s okay. How can I help?" },
-      { speaker: "agent", text: `Thank you. The user’s goal is: ${request.goal}.` },
+      { speaker: "agent", text: `Thank you. The user has already shared the details I need, and the goal is: ${request.goal}.` },
       { speaker: "business", text: "I can help with that. Before I confirm the requested next step, should I proceed?", approvalGate },
       { speaker: "agent", text: "The user has approved that next step. Please proceed within the limits we shared." },
       { speaker: "business", text: "Understood. The requested next step is confirmed for this supervised demonstration. The demo reference is CA-2048." },
@@ -60,12 +61,12 @@ function scriptedCall(
 
   if (destinationId === "lakeside-center") {
     return [
-      { speaker: "agent", text: "Hello, I’m an AI accessibility assistant calling for Maya. Maya is following with live captions. May we continue with live transcription?" },
+      { speaker: "agent", text: "Hello, I’m Call Assist, an AI accessibility assistant helping Maya follow this phone call through live captions. Is it okay to continue with live transcription and keep a temporary text transcript for her review afterward?" },
       { speaker: "business", text: "Yes, that’s okay. How can I help?" },
       { speaker: "agent", text: "Thank you. Maya would like to know whether the Tuesday evening beginner pottery class still has space." },
       { speaker: "business", text: "There are two spaces left. The class begins Tuesday at 6:30 PM and materials are included." },
-      { speaker: "agent", text: "Is registration free, and is there an accessible entrance near the studio?" },
-      { speaker: "business", text: "Registration is free for members. The north entrance is step-free. I can register Maya now if she’d like.", approvalGate: "Register for the Tuesday pottery class" },
+      { speaker: "agent", text: "That sounds like the best fit. Before Maya decides, could you confirm whether the studio has a step-free entrance?" },
+      { speaker: "business", text: "Yes. The north entrance is step-free, and registration is free for members. I can register Maya now if she’d like.", approvalGate: "Register for the Tuesday pottery class" },
       { speaker: "agent", text: "Maya has approved the registration. Please go ahead." },
       { speaker: "business", text: "All set. Her confirmation code is LCC-6318. Please arrive ten minutes early." },
       { speaker: "agent", text: "Thank you. I’ll share that confirmation and arrival note with Maya. Goodbye." },
@@ -73,11 +74,11 @@ function scriptedCall(
   }
 
   return [
-    { speaker: "agent", text: "Hello, I’m an AI accessibility assistant calling for Maya. Maya is following with live captions. May we continue with live transcription?" },
+    { speaker: "agent", text: "Hello, I’m Call Assist, an AI accessibility assistant helping Maya follow this phone call through live captions. Is it okay to continue with live transcription and keep a temporary text transcript for her review afterward?" },
     { speaker: "business", text: "Yes, that’s fine. How can I help today?" },
     { speaker: "agent", text: "Thank you. Maya would like to reserve a quiet study room next Tuesday at 2:00 PM for two people." },
     { speaker: "business", text: "Let me check. We have a quiet room available from 2:00 to 4:00 PM." },
-    { speaker: "agent", text: "Great. Is there a fee, and what should Maya bring when she arrives?" },
+    { speaker: "agent", text: "That sounds like the right match. Before Maya decides, could you tell me what she should bring when she arrives?" },
     { speaker: "business", text: "There’s no fee. She should bring a library card or photo ID. I can hold the room now.", approvalGate: "Reserve the room Tuesday from 2:00 to 4:00 PM" },
     { speaker: "agent", text: "Maya has approved the reservation. Please hold the room." },
     { speaker: "business", text: "It’s reserved. The confirmation number is WSL-2481." },
@@ -98,6 +99,12 @@ function phoneLabel(phoneNumber: string): string {
     return `(${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7)}`;
   }
   return phoneNumber;
+}
+
+function planningStatusMessage(elapsedSeconds: number): string {
+  if (elapsedSeconds < 8) return "GPT-5.6 is preparing the call plan…";
+  if (elapsedSeconds < 20) return "Still preparing a concise, low-pressure conversation path…";
+  return "This is taking longer than usual. You can keep waiting or cancel without losing your details.";
 }
 
 function callStatusLabel(
@@ -142,6 +149,7 @@ export default function Home() {
   const [outcome, setOutcome] = useState<CallOutcome | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [planningElapsedSeconds, setPlanningElapsedSeconds] = useState(0);
   const [commandPending, setCommandPending] = useState(false);
   const [callMode, setCallMode] = useState<CallMode | null>(null);
   const [liveAvailability, setLiveAvailability] = useState<LiveAvailability>("checking");
@@ -157,9 +165,13 @@ export default function Home() {
   const captionEndRef = useRef<HTMLDivElement | null>(null);
   const guidanceRef = useRef<HTMLInputElement | null>(null);
   const approvalRef = useRef<HTMLDivElement | null>(null);
+  const reviewHeadingRef = useRef<HTMLHeadingElement | null>(null);
   const captionsRef = useRef<TranscriptTurn[]>([]);
   const eventCursorRef = useRef(0);
   const endingRef = useRef(false);
+  const planningAbortRef = useRef<AbortController | null>(null);
+  const planningAttemptRef = useRef(0);
+  const planInFlightRef = useRef(false);
 
   const selectedDestination = useMemo(
     () =>
@@ -207,6 +219,22 @@ export default function Home() {
     return () => window.clearTimeout(timer);
   }, [pendingApproval]);
 
+  useEffect(() => {
+    if (!loading || stage !== "setup") return;
+    const startedAt = Date.now();
+    const timer = window.setInterval(
+      () => setPlanningElapsedSeconds(Math.floor((Date.now() - startedAt) / 1_000)),
+      1_000,
+    );
+    return () => window.clearInterval(timer);
+  }, [loading, stage]);
+
+  useEffect(() => {
+    if (stage !== "review") return;
+    const timer = window.setTimeout(() => reviewHeadingRef.current?.focus(), 0);
+    return () => window.clearTimeout(timer);
+  }, [stage]);
+
   const finishCall = useCallback(
     async (
       status: CallOutcome["status"],
@@ -233,8 +261,13 @@ export default function Home() {
         });
         const data = (await response.json()) as CallOutcome & { error?: string };
         if (!response.ok) throw new Error(data.error ?? "Could not create the outcome.");
+        if (callMode === "live" && liveCallId) {
+          await fetch(`/api/live/${liveCallId}/transcript`, {
+            method: "DELETE",
+            signal: AbortSignal.timeout(2_000),
+          }).catch(() => undefined);
+        }
         setOutcome(data);
-        setCaptions([]);
         setStage("outcome");
       } catch (caught) {
         setError(caught instanceof Error ? caught.message : "Could not create the outcome.");
@@ -352,11 +385,20 @@ export default function Home() {
 
   async function handlePlan(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (planInFlightRef.current) return;
     setError("");
     if (!safetyConfirmed) {
       setError("Confirm that this is a user-initiated, low-risk call before continuing.");
       return;
     }
+
+    const attemptId = planningAttemptRef.current + 1;
+    planningAttemptRef.current = attemptId;
+    planInFlightRef.current = true;
+    const controller = new AbortController();
+    planningAbortRef.current = controller;
+    const timeout = window.setTimeout(() => controller.abort("timeout"), 65_000);
+    setPlanningElapsedSeconds(0);
     setLoading(true);
 
     const request: CallRequest = {
@@ -372,19 +414,58 @@ export default function Home() {
     try {
       const response = await fetch("/api/plan", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(request),
+        signal: controller.signal,
       });
-      const data = (await response.json()) as CallPlan & { error?: string };
-      if (!response.ok) throw new Error(data.error ?? "Could not create the call plan.");
+      const body = await response.json().catch(() => null) as unknown;
+      if (!response.ok) {
+        const message = typeof body === "object" && body && "error" in body
+          ? String(body.error)
+          : "Could not create the call plan.";
+        throw new Error(message);
+      }
+      const parsedPlan = CallPlanSchema.safeParse(body);
+      if (!parsedPlan.success) {
+        throw new Error("The plan response was incomplete. Please try again.");
+      }
+      if (controller.signal.aborted || attemptId !== planningAttemptRef.current) return;
       setActiveRequest(request);
-      setPlan(data);
+      setPlan(parsedPlan.data);
       setStage("review");
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Could not create the call plan.");
+      if (attemptId !== planningAttemptRef.current) return;
+      if (controller.signal.aborted) {
+        setError(
+          controller.signal.reason === "timeout"
+            ? "The plan took too long to generate. Your details are still here; please try again."
+            : "Plan creation canceled. Your details are still here.",
+        );
+      } else {
+        setError(caught instanceof Error ? caught.message : "Could not create the call plan.");
+      }
     } finally {
-      setLoading(false);
+      window.clearTimeout(timeout);
+      if (attemptId === planningAttemptRef.current) {
+        planInFlightRef.current = false;
+        planningAbortRef.current = null;
+        setLoading(false);
+      }
     }
+  }
+
+  function cancelPlan() {
+    const controller = planningAbortRef.current;
+    if (!controller) return;
+    planningAttemptRef.current += 1;
+    planInFlightRef.current = false;
+    planningAbortRef.current = null;
+    controller.abort("canceled");
+    setPlanningElapsedSeconds(0);
+    setLoading(false);
+    setError("Plan creation canceled. Your details are still here.");
   }
 
   function toggleBoundary(boundary: string) {
@@ -447,7 +528,7 @@ export default function Home() {
       const initialCaptions: TranscriptTurn[] = [{
         id: "system-live-starting",
         speaker: "system",
-        text: "Live call requested. No audio is recorded; captions remain temporary.",
+        text: "Live call requested. No audio is recorded; captions remain in this tab until you clear them or leave.",
       }];
       setCaptions(initialCaptions);
       captionsRef.current = initialCaptions;
@@ -577,6 +658,11 @@ export default function Home() {
     window.setTimeout(() => guidanceRef.current?.focus(), 0);
   }
 
+  function clearTranscript() {
+    setCaptions([]);
+    captionsRef.current = [];
+  }
+
   function resetCall() {
     setStage("setup");
     setPlan(null);
@@ -647,18 +733,19 @@ export default function Home() {
               <div className="promise-list" aria-label="Your controls">
                 <div><span aria-hidden="true">1</span><p><strong>Review first</strong><br />Nothing starts until you approve the plan.</p></div>
                 <div><span aria-hidden="true">2</span><p><strong>Stay in control</strong><br />Pause, correct, type a message, or hang up anytime.</p></div>
-                <div><span aria-hidden="true">3</span><p><strong>Approve commitments</strong><br />The assistant stops before booking or sharing sensitive facts.</p></div>
+                <div><span aria-hidden="true">3</span><p><strong>Approve commitments</strong><br />The assistant stops before a booking, registration, or cancellation.</p></div>
               </div>
-              <div className="privacy-note"><span aria-hidden="true">●</span><p><strong>Privacy by default</strong><br />No audio recording. The demo transcript disappears after the outcome is created.</p></div>
+              <div className="privacy-note"><span aria-hidden="true">●</span><p><strong>Privacy by default</strong><br />No audio recording. Captions stay in this tab after the call so you can review or clear them.</p></div>
             </div>
 
-            <form className="setup-card" onSubmit={handlePlan}>
+            <form className="setup-card" onSubmit={handlePlan} aria-busy={loading}>
               <div className="field-group">
                 <label htmlFor="destination">Who should we call?</label>
                 <select
                   id="destination"
                   value={destinationId}
                   onChange={(event) => setDestinationId(event.target.value)}
+                  disabled={loading}
                 >
                   {DEMO_DESTINATIONS.map((destination) => (
                     <option key={destination.id} value={destination.id}>{destination.name}</option>
@@ -685,6 +772,7 @@ export default function Home() {
                       onChange={(event) => setLiveDestinationName(event.target.value)}
                       placeholder="Neighborhood library"
                       required
+                      disabled={loading}
                     />
                   </div>
                   <div className="field-group">
@@ -697,6 +785,7 @@ export default function Home() {
                       placeholder="+13125550100"
                       autoComplete="tel"
                       required
+                      disabled={loading}
                     />
                     <p className="field-hint">Use E.164 format, including country code.</p>
                   </div>
@@ -705,20 +794,20 @@ export default function Home() {
 
               <div className="field-group">
                 <label htmlFor="goal">What should the call accomplish?</label>
-                <textarea id="goal" rows={3} value={goal} onChange={(event) => setGoal(event.target.value)} required minLength={8} />
+                <textarea id="goal" rows={3} value={goal} onChange={(event) => setGoal(event.target.value)} required minLength={8} disabled={loading} />
               </div>
 
               <div className="field-group">
                 <label htmlFor="facts">Facts Call Assist may share</label>
-                <textarea id="facts" rows={4} value={facts} onChange={(event) => setFacts(event.target.value)} />
-                <p className="field-hint">One fact per line. Only include what the business needs.</p>
+                <textarea id="facts" rows={4} value={facts} onChange={(event) => setFacts(event.target.value)} disabled={loading} />
+                <p className="field-hint">One fact per line. Only include what the business needs. If you want Call Assist to say you are Deaf or hard of hearing, include that here explicitly.</p>
               </div>
 
               <fieldset className="boundary-fieldset">
-                <legend>Always stop and ask me before…</legend>
+                <legend>Rules Call Assist must follow</legend>
                 {boundaryOptions.map((boundary) => (
                   <label className="check-row" key={boundary}>
-                    <input type="checkbox" checked={boundaries.includes(boundary)} onChange={() => toggleBoundary(boundary)} />
+                    <input type="checkbox" checked={boundaries.includes(boundary)} onChange={() => toggleBoundary(boundary)} disabled={loading} />
                     <span className="fake-check" aria-hidden="true">✓</span>
                     <span>{boundary}</span>
                   </label>
@@ -726,7 +815,7 @@ export default function Home() {
               </fieldset>
 
               <label className="safety-check">
-                <input type="checkbox" checked={safetyConfirmed} onChange={(event) => setSafetyConfirmed(event.target.checked)} required />
+                <input type="checkbox" checked={safetyConfirmed} onChange={(event) => setSafetyConfirmed(event.target.checked)} required disabled={loading} />
                 <span className="fake-check" aria-hidden="true">✓</span>
                 <span><strong>This is a user-initiated, low-risk call.</strong><small>Not an emergency, payment, medical decision, financial transaction, or marketing call.</small></span>
               </label>
@@ -734,6 +823,16 @@ export default function Home() {
               <button className="primary-button full-width" type="submit" disabled={loading || boundaries.length === 0}>
                 {loading ? "Creating a safe plan…" : "Create call plan"}<span aria-hidden="true">→</span>
               </button>
+              {loading && (
+                <div className="planning-status-panel">
+                  <div className="planning-status-copy">
+                    <div className="planning-progress" aria-hidden="true"><span /></div>
+                    <strong role="status" aria-live="polite">{planningStatusMessage(planningElapsedSeconds)}</strong>
+                    <p aria-hidden="true">Waiting {planningElapsedSeconds} second{planningElapsedSeconds === 1 ? "" : "s"}</p>
+                  </div>
+                  <button className="secondary-button planning-cancel-button" type="button" onClick={cancelPlan}>Cancel</button>
+                </div>
+              )}
             </form>
           </section>
         )}
@@ -743,7 +842,7 @@ export default function Home() {
             <div className="section-heading-row">
               <div>
                 <p className="eyebrow">Ready for your review</p>
-                <h1 id="review-heading">Check the plan before anything happens.</h1>
+                <h1 id="review-heading" ref={reviewHeadingRef} tabIndex={-1}>Check the plan before anything happens.</h1>
               </div>
               <span className="mode-chip">{plan.mode === "ai" ? "GPT-5.6 plan" : "Judge-safe simulation"}</span>
             </div>
@@ -854,7 +953,7 @@ export default function Home() {
                   <small>{correctionMode ? "The call stays paused until you resume it." : "Call Assist will say this at the next safe opening."}</small>
                 </form>
 
-                <div className="call-safety"><span aria-hidden="true">●</span><p><strong>No audio recording</strong><br />{callMode === "live" ? "Provider audio is streamed, not stored. Captions are cleared after the outcome." : "Captions are temporary and cleared after the outcome."}</p></div>
+                <div className="call-safety"><span aria-hidden="true">●</span><p><strong>No audio recording</strong><br />{callMode === "live" ? "Provider audio is streamed, not stored. Captions stay in this tab after the outcome until you clear them or leave." : "Captions stay in this tab after the outcome until you clear them or leave."}</p></div>
                 {approvedDecision && <p className="approved-note" role="status">✓ Your approval was added to the call.</p>}
               </aside>
             </div>
@@ -874,7 +973,24 @@ export default function Home() {
             <div className="outcome-grid">
               <article className="outcome-card"><div className="card-kicker">Confirmed</div><ul className="success-list">{outcome.confirmed.map((item) => <li key={item}><span aria-hidden="true">✓</span>{item}</li>)}</ul></article>
               <article className="outcome-card"><div className="card-kicker">Next step</div><ul className="next-list">{outcome.nextSteps.map((item, index) => <li key={item}><span>{index + 1}</span>{item}</li>)}</ul>{outcome.unresolved.length > 0 && <div className="unresolved"><strong>Still unresolved</strong>{outcome.unresolved.map((item) => <p key={item}>{item}</p>)}</div>}</article>
-              <article className="outcome-card privacy-outcome"><div className="privacy-symbol" aria-hidden="true">●</div><div><div className="card-kicker">Privacy check</div><h2>Transcript cleared</h2><p>The temporary captions were discarded after this structured outcome was created. No audio was recorded.</p></div></article>
+              <article className="outcome-card privacy-outcome"><div className="privacy-symbol" aria-hidden="true">●</div><div><div className="card-kicker">Privacy check</div><h2>{captions.length > 0 ? "Transcript available for review" : "Transcript cleared"}</h2><p>{captions.length > 0 ? "Your review copy stays in this browser tab and is not written to durable app storage. It disappears when you clear it, refresh or close the tab, or plan another call. Temporary call-service captions are purged after the outcome or expire automatically. No audio was recorded." : "The review copy was removed from this browser tab. Temporary call-service captions are purged after the outcome or expire automatically. No audio was recorded."}</p></div></article>
+              <article className="outcome-card transcript-outcome" aria-labelledby="transcript-heading">
+                <div className="transcript-heading-row">
+                  <div><div className="card-kicker">Your call record</div><h2 id="transcript-heading">Call transcript</h2></div>
+                  <button className="secondary-button transcript-clear-button" type="button" onClick={clearTranscript} disabled={captions.length === 0}>Clear from this tab</button>
+                </div>
+                {captions.length > 0 ? (
+                  <ol className="transcript-review-list" tabIndex={0} aria-labelledby="transcript-heading">
+                    {captions.map((turn) => (
+                      <li className={`transcript-review-turn ${turn.speaker}`} key={turn.id}>
+                        <span>{speakerLabel(turn.speaker)}</span><p>{turn.text}</p>
+                      </li>
+                    ))}
+                  </ol>
+                ) : (
+                  <p className="transcript-cleared-status" role="status">Transcript cleared from this tab.</p>
+                )}
+              </article>
             </div>
 
             <div className="outcome-actions"><button className="primary-button" type="button" onClick={resetCall}>Plan another call <span aria-hidden="true">→</span></button><span>{outcome.mode === "ai" ? "Outcome structured by GPT-5.6" : "Judge-safe simulated outcome"}</span></div>

@@ -8,7 +8,7 @@
 4. The user reviews the disclosure, conversation path, success criteria, approval gates, and stop conditions.
 5. The default call UI runs against a scripted transport. The implemented live service can create a Twilio outbound call and bridge its bidirectional Media Stream to an OpenAI Realtime session once credentials and a public HTTPS endpoint are configured.
 6. The browser polls cursor-based live events and projects them into the same large caption, approval, and control surfaces used by the scripted path.
-7. After hang-up, `POST /api/outcome` converts the temporary transcript into a strict `CallOutcome`, then the browser clears its transcript state.
+7. After hang-up, `POST /api/outcome` converts the temporary transcript into a strict `CallOutcome`. The browser keeps a review copy in the current tab until the user clears it, refreshes or closes the tab, or starts another call.
 
 ## Stable contracts
 
@@ -27,7 +27,7 @@ The deterministic demo and the credential-backed OpenAI routes return the same c
 
 Implemented browser events:
 
-- `call.state`: connecting, ringing, consent, live, paused, ending, ended
+- `call.state`: connecting, ringing, live, paused, ending, ended
 - `caption.final`: speaker-labeled temporary text
 - `approval.requested`: commitment text and a stable approval ID
 - `approval.resolved`: approve or decline decision
@@ -42,20 +42,33 @@ Implemented browser commands:
 - `approval.resolve`
 - `call.end`
 
+After outcome creation, the browser requests `DELETE /api/live/:callId/transcript` so the telephony process removes caption events and Realtime references from its temporary call record. The browser review copy is separate and remains until the user clears it or leaves.
+
 Provider-specific audio frames, credentials, call SIDs, and Realtime event payloads stay on the server.
 
 The live UI adapter remains deliberately gated from the default scripted demo. It calls `POST /api/live/start`, polls cursor-based events, and sends supervision actions to `POST /api/live/:callId/commands` only after the operator chooses an allowlisted live destination and starts the reviewed plan.
+
+## Voice model decision — July 18, 2026
+
+OpenAI announced GPT‑Live on July 8, 2026. GPT‑Live‑1 and GPT‑Live‑1 mini are currently documented for ChatGPT Voice; OpenAI says API access is coming soon, but as of July 18 it has not published a GPT‑Live API model ID, endpoint contract, pricing, or rate limits.
+
+Call Assist will keep the documented `gpt-realtime-2.1` API for the July 21 Build Week demo. That integration is already tested with the Twilio Media Streams bridge, captions, interruption handling, tools, and supervisor approvals. Changing models this close to the deadline would add undocumented availability and transport risk without improving the judge-visible core workflow.
+
+The browser-facing call contracts remain provider-neutral. Treat Realtime session construction inside the telephony service as the adapter seam, and evaluate GPT‑Live only after OpenAI publishes its API contract. Before migrating, re-test telephone audio, latency, interruptions, captions, consent, transcript handling, tool approvals, pricing, and rate limits.
+
+Sources: [Introducing GPT‑Live](https://openai.com/index/introducing-gpt-live/), [GPT‑Live‑1 API notification](https://openai.com/form/gpt-live-1-in-the-api/), and [`gpt-realtime-2.1` API documentation](https://developers.openai.com/api/docs/models/gpt-realtime-2.1).
 
 ## Realtime session policy
 
 - Model: `gpt-realtime-2.1`
 - Server-to-server WebSocket transport for phone media
-- Low reasoning effort as the latency baseline
-- Opening AI/accessibility disclosure before the goal
-- Affirmative consent before live transcription continues
-- Tools limited to approval requests and call-state controls
+- Medium reasoning effort so the assistant can synthesize answers and choose a low-pressure next step before speaking
+- The opening disclosure and consent question precede the substantive goal. The Realtime transport processes that opening exchange to capture the recipient's answer; no substantive conversation continues unless consent is affirmative.
+- At most two substantive clarification questions after consent, with tentative synthesis preferred over open-ended interviewing
+- Structured approvals limited to explicit user gates for no-payment reservations, appointments, registrations, and cancellations
+- Runtime rejection for prices, payments, purchases, deposits, subscriptions, sensitive disclosures, and actions without a matching user gate
 - Immediate stop on declined consent, unsupported risk, or a user hang-up
-- No audio persistence
+- Call Assist does not enable provider recording or persist audio; Realtime history audio storage is disabled
 
 ## Service lifecycle
 
@@ -63,4 +76,4 @@ Call state, final captions, and pending approvals are held in process memory. Co
 
 ## Privacy
 
-The current build keeps captions in browser memory only while the call screen is active. The transcript is sent once to the outcome endpoint, with OpenAI storage disabled when the model path is used, and then deleted from browser state. Production logging must exclude transcript text and provider audio frames.
+The current build keeps the review copy in browser memory during the call and outcome review. The transcript is sent once to the outcome endpoint, with OpenAI storage disabled when the model path is used. After the outcome is created, the browser asks the telephony service to purge caption events and Realtime references from its temporary call record; if that best-effort request fails, the completed record expires after five minutes. The browser review copy disappears when the user clears it, refreshes or closes the tab, or starts another call. Production logging must exclude transcript text and provider audio frames.
