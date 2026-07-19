@@ -26,10 +26,15 @@ Deadline: July 21, 2026 at 5:00 PM Pacific.
 - [x] Public GitHub repository URL ready
 - [x] Deployed judge-access URL ready
 - [x] YouTube URL ready and accessible without authentication
-- [ ] Add the `/feedback` session ID from the task where most core functionality was built
-- [ ] Confirm the temporary product name or choose the final name
-- [ ] Select the submitter type and country of residence, and confirm the solo/team status
+- [x] Add the `/feedback` session ID from the task where most core functionality was built
+- [x] Confirm **Call Assist** as the final project name
+- [x] Save the submitter type (**Individual**), country (**United States**), and solo status
 - [x] Complete the Devpost project description and testing instructions
 - [ ] Review the final Devpost preview in the entrant's own voice
 - [ ] Accept the Official Rules and Devpost Terms of Service
 - [ ] Submit before July 21, 2026 at 5:00 PM Pacific and retain a confirmation screenshot
+
+## After submission
+
+- [ ] Keep the public app, repository, and demo video available free of charge and without restriction through August 5, 2026 at 5:00 PM Pacific
+- [ ] Monitor Devpost and email for verification or access requests and the winner announcement around August 12, 2026

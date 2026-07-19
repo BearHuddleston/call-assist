@@ -97,13 +97,13 @@ No account or credentials are required. Open the public demo and use the prefill
 
 This path is a deterministic simulation and places no phone call; no audio is recorded. The live Twilio/OpenAI Realtime path is private, credential-gated, and allowlisted.
 
-## Remaining user-owned form values
+## Submission form status
 
-- `/feedback` Codex Session ID: **TODO — obtain from the task where most core functionality was built**
-- Final project-name confirmation: **TODO**
-- Submitter type: **TODO — Individual, Team of Individuals, or Organization**
-- Country of residence: **TODO**
-- Solo/team confirmation: **TODO**
+- `/feedback` Codex Session ID: **Entered in Devpost**
+- Final project-name confirmation: **Call Assist**
+- Submitter type: **Individual**
+- Country of residence: **United States**
+- Solo/team confirmation: **Solo submission**
 - Video visibility: **Public and accessible without authentication.**
 - Official Rules and Devpost Terms acceptance: **USER ACTION REQUIRED at final submission**
 - Final submission and confirmation screenshot: **TODO**
