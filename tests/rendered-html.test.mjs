@@ -13,18 +13,18 @@ async function requestWorker(path = "/", init = {}) {
   );
 }
 
-test("server-renders the Call Assist setup experience", async () => {
+test("server-renders the SayAhead setup experience", async () => {
   const response = await requestWorker("/", { headers: { accept: "text/html" } });
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
 
   const html = await response.text();
-  assert.match(html, /<title>Call Assist — supervised calls you can read<\/title>/i);
-  assert.match(html, /Tell us what you need from the call/);
+  assert.match(html, /<title>SayAhead — phone calls you can read, guide, and control<\/title>/i);
+  assert.match(html, /What do you need this call to get done/);
   assert.match(html, /Create call plan/);
-  assert.match(html, /No audio recording/);
+  assert.match(html, /SayAhead records no audio/);
   assert.match(html, /Captions stay in this tab after the call/);
-  assert.match(html, /If you want Call Assist to say you are Deaf or hard of hearing/);
+  assert.match(html, /SayAhead will mention that you’re Deaf or hard of hearing only if you write it here/);
   assert.match(html, /user-initiated, low-risk call/);
   assert.doesNotMatch(html, /codex-preview/);
   assert.doesNotMatch(html, /react-loading-skeleton/);

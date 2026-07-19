@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Render the Call Assist Build Week demo from captured product states.
+"""Render the SayAhead Build Week demo from captured product states.
 
 The renderer deliberately uses the real public demo UI, OpenAI-generated
 narration, and an isolated MoviePy/FFmpeg environment. It does not place a
@@ -14,6 +14,7 @@ import json
 import math
 import os
 import re
+import subprocess
 import time
 import urllib.error
 import urllib.request
@@ -40,8 +41,8 @@ FPS = 24
 TAIL_SECONDS = 0.35
 
 AUDIO_ENDPOINT = "https://api.openai.com/v1/chat/completions"
-AUDIO_MODEL = os.environ.get("CALL_ASSIST_NARRATION_MODEL", "gpt-audio-1.5")
-AUDIO_VOICE = os.environ.get("CALL_ASSIST_NARRATION_VOICE", "marin")
+AUDIO_MODEL = os.environ.get("SAYAHEAD_NARRATION_MODEL", "gpt-audio-1.5")
+AUDIO_VOICE = os.environ.get("SAYAHEAD_NARRATION_VOICE", "marin")
 AUDIO_INSTRUCTIONS = (
     "You are a verbatim narration engine, not an assistant responding to the script. Speak every word "
     "between <approved_script> and </approved_script> exactly once. Never answer its content. Never add "
@@ -198,7 +199,7 @@ SCENES: List[Dict[str, object]] = [
         "narration": (
             "This demo uses an AI-generated narration voice. For many Deaf and hard-of-hearing people, "
             "a simple phone-only task can become a barrier. "
-            "Call Assist makes the conversation readable and controllable."
+            "SayAhead lets the user read, guide, and control the conversation."
         ),
         "visuals": ["title-card.png"],
         "badge": "AI-GENERATED NARRATION · PRODUCT DEMO",
@@ -206,7 +207,7 @@ SCENES: List[Dict[str, object]] = [
     {
         "id": "02-product",
         "narration": (
-            "It is a supervised, text-first calling copilot. The user sets the destination, goal, facts "
+            "It is a supervised, text-first calling assistant. The user sets the destination, goal, facts "
             "that may be shared, and hard boundaries. The assistant handles the conversation, but the user "
             "keeps final control."
         ),
@@ -248,24 +249,24 @@ SCENES: List[Dict[str, object]] = [
         "id": "05-review",
         "narration": (
             "Nothing happens before review. Maya can check the objective, conversation path, success criteria, "
-            "and every approval gate. The opening identifies Call Assist as an AI accessibility assistant and "
-            "asks affirmative consent before live transcription and temporary text review."
+            "and every approval gate. The opening identifies SayAhead’s AI accessibility assistant and "
+            "asks affirmative consent to continue with live transcription and temporary text review."
         ),
         "visuals": ["06-plan-review.png"],
     },
     {
         "id": "06-simulation",
         "narration": (
-            "What you are about to see is a judge-safe simulation; it does not place a phone call. The Twilio "
+            "What you are about to see is a public demo simulation; it does not place a phone call. The Twilio "
             "and OpenAI Realtime path is implemented and has been tested with a consented, allowlisted destination."
         ),
         "visuals": ["06-plan-review.png", "07-call-connecting.png"],
-        "badge": "JUDGE-SAFE SIMULATION · NO PHONE CALL PLACED",
+        "badge": "PUBLIC DEMO SIMULATION · NO PHONE CALL PLACED",
     },
     {
         "id": "07-conversation",
         "narration": (
-            "Rather than pressure the person answering with a checklist, Call Assist explains that it is helping "
+            "Rather than pressure the person answering with a checklist, the assistant explains that it is helping "
             "someone use live captions, asks one warm consent question, and then uses the plan to make reasonable "
             "low-risk choices while keeping the exchange natural."
         ),
@@ -275,13 +276,13 @@ SCENES: List[Dict[str, object]] = [
             "10-call-goal.png",
             "11-call-availability.png",
         ],
-        "badge": "JUDGE-SAFE SIMULATED CALL",
+        "badge": "PUBLIC DEMO · SIMULATED CALL",
     },
     {
         "id": "08-controls",
         "narration": (
-            "Maya can pause without speaking, type what Call Assist should say, correct a detail, resume, or end "
-            "the call. Large two-speaker captions clearly separate the business from the assistant, so she can "
+            "Maya can pause without speaking, type what SayAhead should say, correct a detail, resume, or end "
+            "the call. Large two-speaker captions clearly separate the person answering from the assistant, so she can "
             "follow the conversation at a glance."
         ),
         "visuals": [
@@ -295,7 +296,7 @@ SCENES: List[Dict[str, object]] = [
     {
         "id": "09-approval",
         "narration": (
-            "When the library offers the room, Call Assist stops. Nothing is committed until Maya chooses. "
+            "When the library offers the room, the assistant stops. Nothing is committed until Maya chooses. "
             "Payments, emergencies, marketing, and high-stakes medical or financial calls are blocked entirely; "
             "this first release stays deliberately low risk."
         ),
@@ -306,13 +307,13 @@ SCENES: List[Dict[str, object]] = [
         "id": "10-outcome",
         "narration": (
             "After the call, Maya gets confirmed details, the reference number, next actions, and the full "
-            "conversation for review. In configured mode, GPT-5.6 structures this outcome. No audio is recorded; "
+            "conversation for review. In configured mode, GPT-5.6 structures this outcome. SayAhead does not record or store audio; "
             "the text remains only in this browser tab and can be cleared explicitly."
         ),
         "speech": (
             "After the call, Maya gets confirmed details, the reference number, next actions, and the full "
-            "conversation for review. In configured mode, G P T five point six structures this outcome. No audio "
-            "is recorded; the text remains only in this browser tab and can be cleared explicitly."
+            "conversation for review. In configured mode, G P T five point six structures this outcome. SayAhead does not "
+            "record or store audio; the text remains only in this browser tab and can be cleared explicitly."
         ),
         "visuals": ["20-outcome.png", "21-transcript-review.png"],
     },
@@ -320,11 +321,13 @@ SCENES: List[Dict[str, object]] = [
         "id": "11-close",
         "narration": (
             "Codex helped me implement and test the accessible React interface, safety guardrails, GPT-5.6 "
-            "integration, and the Twilio-to-OpenAI Realtime bridge. Call Assist makes phone calls readable."
+            "integration, and the Twilio-to-OpenAI Realtime bridge. SayAhead turns phone calls into conversations "
+            "the user can read, guide, and control."
         ),
         "speech": (
             "Codex helped me implement and test the accessible React interface, safety guardrails, G P T five "
-            "point six integration, and the Twilio to OpenAI Realtime bridge. Call Assist makes phone calls readable."
+            "point six integration, and the Twilio to OpenAI Realtime bridge. SayAhead turns phone calls into "
+            "conversations the user can read, guide, and control."
         ),
         "visuals": ["end-card.png"],
     },
@@ -367,17 +370,17 @@ def make_title_card(path: Path) -> None:
     image = Image.new("RGB", (WIDTH, HEIGHT), CREAM)
     draw = ImageDraw.Draw(image)
     draw.rounded_rectangle((120, 105, 250, 235), radius=28, fill=NAVY)
-    centered_text(draw, (120, 105, 250, 235), "CA", font(46, True), WHITE)
+    centered_text(draw, (120, 105, 250, 235), "SA", font(46, True), WHITE)
     draw.line((290, 172, 1720, 172), fill="#D7D2C7", width=3)
     draw.rounded_rectangle((1450, 105, 1795, 165), radius=30, fill="#E7F4ED")
     centered_text(draw, (1450, 105, 1795, 165), "APPS FOR YOUR LIFE", font(23, True), GREEN)
-    centered_text(draw, (170, 290, 1750, 580), "Call Assist", font(126, True), NAVY)
-    centered_text(draw, (300, 565, 1620, 690), "Calls you can read and control", font(52), BLUE)
+    centered_text(draw, (170, 290, 1750, 580), "SayAhead", font(126, True), NAVY)
+    centered_text(draw, (260, 565, 1660, 690), "Phone calls you can read, guide, and control", font(46), BLUE)
     draw.rounded_rectangle((360, 745, 1560, 895), radius=34, fill="#FFFFFF", outline="#DAD5CA", width=3)
     centered_text(
         draw,
         (400, 770, 1520, 870),
-        "A supervised calling copilot for\nDeaf and hard-of-hearing people",
+        "A supervised calling assistant for\nDeaf and hard-of-hearing people",
         font(34, True),
         NAVY,
         spacing=13,
@@ -389,8 +392,8 @@ def make_end_card(path: Path) -> None:
     image = Image.new("RGB", (WIDTH, HEIGHT), NAVY)
     draw = ImageDraw.Draw(image)
     draw.rounded_rectangle((840, 105, 1080, 345), radius=52, fill=BLUE)
-    centered_text(draw, (840, 105, 1080, 345), "CA", font(76, True), WHITE)
-    centered_text(draw, (220, 365, 1700, 555), "Calls you can read and control", font(72, True), WHITE)
+    centered_text(draw, (840, 105, 1080, 345), "SA", font(76, True), WHITE)
+    centered_text(draw, (180, 365, 1740, 555), "Phone calls you can read, guide, and control", font(57, True), WHITE)
     centered_text(draw, (260, 555, 1660, 675), "Built with Codex", font(42, True), "#8DB4FF")
     draw.rounded_rectangle((335, 650, 1585, 750), radius=34, fill="#1F2C49")
     centered_text(
@@ -403,8 +406,8 @@ def make_end_card(path: Path) -> None:
     centered_text(
         draw,
         (250, 765, 1670, 890),
-        "call-assist-accessible-calls.bearhuddleston.chatgpt.site\n"
-        "github.com/BearHuddleston/call-assist",
+        "Public demo linked below\n"
+        "github.com/BearHuddleston/sayahead",
         font(27),
         "#D7E3FF",
         spacing=16,
@@ -681,7 +684,8 @@ def generate_audio(scene: Dict[str, object], api_key: str) -> Path:
             normalize = lambda value: re.sub(r"\s+", " ", value.strip())
             if normalize(transcript) != normalize(speech):
                 raise RuntimeError(
-                    f"OpenAI narration transcript mismatch for {scene_id}; refusing to render captions out of sync."
+                    f"OpenAI narration transcript mismatch for {scene_id}; refusing to render captions out of sync. "
+                    f"Expected {normalize(speech)!r}; received {normalize(transcript)!r}."
                 )
             audio_path.write_bytes(base64.b64decode(audio["data"], validate=True))
             break
@@ -760,12 +764,13 @@ def render() -> None:
         raise RuntimeError(f"Video would be {global_cursor:.2f}s, exceeding the three-minute limit.")
 
     (ROOT / "narration.txt").write_text("\n".join(narration_lines), encoding="utf-8")
-    (OUTPUT / "call-assist-demo.srt").write_text("\n".join(srt_entries), encoding="utf-8")
+    (OUTPUT / "sayahead-demo.srt").write_text("\n".join(srt_entries), encoding="utf-8")
 
     final = concatenate_videoclips(scene_clips, method="compose")
-    output_path = OUTPUT / "call-assist-build-week-demo.mp4"
+    pre_normalize_path = OUTPUT / "sayahead-build-week-demo-pre-normalize.mp4"
+    output_path = OUTPUT / "sayahead-build-week-demo.mp4"
     final.write_videofile(
-        str(output_path),
+        str(pre_normalize_path),
         fps=FPS,
         codec="libx264",
         audio_codec="aac",
@@ -775,12 +780,30 @@ def render() -> None:
         ffmpeg_params=[
             "-pix_fmt",
             "yuv420p",
-            "-af",
-            "loudnorm=I=-16:LRA=7:TP=-1.5",
             "-movflags",
             "+faststart",
         ],
         logger="bar",
+    )
+    subprocess.run(
+        [
+            imageio_ffmpeg.get_ffmpeg_exe(),
+            "-y",
+            "-i",
+            str(pre_normalize_path),
+            "-c:v",
+            "copy",
+            "-c:a",
+            "aac",
+            "-b:a",
+            "192k",
+            "-af",
+            "loudnorm=I=-16:LRA=7:TP=-1.5",
+            "-movflags",
+            "+faststart",
+            str(output_path),
+        ],
+        check=True,
     )
     print(f"Final duration: {global_cursor:.2f}s")
     print(f"Output: {output_path}")

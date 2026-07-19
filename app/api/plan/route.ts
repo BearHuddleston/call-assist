@@ -24,7 +24,7 @@ export async function POST(request: Request) {
   const parsed = CallRequestSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
     return Response.json(
-      { error: "Please complete the call goal, facts, and safety confirmation." },
+      { error: "Please complete the required call details and confirm that this is a low-risk call." },
       { status: 400 },
     );
   }
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
       reasoning: { effort: PLANNING_REASONING_EFFORT },
       max_output_tokens: PLAN_MAX_OUTPUT_TOKENS,
       store: false,
-      safety_identifier: "call-assist-build-week-demo",
+      safety_identifier: "sayahead-build-week-demo",
       instructions: CALL_PLAN_INSTRUCTIONS,
       input: JSON.stringify(parsed.data),
       text: {
@@ -84,8 +84,8 @@ export async function POST(request: Request) {
     return Response.json(
       {
         error: timedOut
-          ? "The plan took too long to generate. Your details are still here; please try again."
-          : "The AI plan could not be generated. Try again or enable demo mode.",
+          ? "The plan took too long. Your details are still here—please try again."
+          : "The AI plan could not be generated. Please try again.",
       },
       { status: timedOut ? 504 : request.signal.aborted ? 499 : 502 },
     );

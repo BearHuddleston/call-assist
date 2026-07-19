@@ -23,9 +23,9 @@ export async function generateMetadata(): Promise<Metadata> {
     requestHeaders.get("x-forwarded-proto") ??
     (host.startsWith("localhost") ? "http" : "https");
   const origin = `${protocol}://${host}`;
-  const title = "Call Assist — supervised calls you can read";
+  const title = "SayAhead — phone calls you can read, guide, and control";
   const description =
-    "An accessibility-first calling copilot for Deaf and hard-of-hearing people.";
+    "A supervised calling assistant that lets Deaf and hard-of-hearing people read, guide, and control phone conversations.";
   const image = `${origin}/og.png`;
 
   return {
@@ -37,7 +37,7 @@ export async function generateMetadata(): Promise<Metadata> {
       description,
       type: "website",
       url: origin,
-      images: [{ url: image, width: 1672, height: 941, alt: "Call Assist — Calls you can read and control" }],
+      images: [{ url: image, width: 1672, height: 941, alt: "SayAhead — phone calls you can read, guide, and control" }],
     },
     twitter: {
       card: "summary_large_image",

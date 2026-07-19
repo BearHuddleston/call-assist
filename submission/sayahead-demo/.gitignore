@@ -4,5 +4,6 @@ captures/
 generated/
 output/*.mp4
 output/*.png
+*TEMP_MPY*
 __pycache__/
 .DS_Store

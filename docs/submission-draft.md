@@ -4,65 +4,77 @@ Use this as working copy for the Devpost form. Review and rephrase the project s
 
 ## Project overview
 
-**Project name:** Call Assist
+**Project name:** SayAhead
 
-Working-name status: confirm before final submission. Devpost allows up to 60 characters.
+**Elevator pitch:** Phone calls you can read, guide, and control—a supervised calling assistant for Deaf and hard-of-hearing people.
 
-**Elevator pitch:** A supervised calling copilot that gives Deaf and hard-of-hearing people live, readable conversations and explicit control over every commitment.
-
-The pitch is 144 characters; Devpost allows up to 200.
+The pitch is under Devpost's 200-character limit.
 
 **Category:** Apps for Your Life
 
-**Optional thumbnail:** `public/og.png` is available at 1672×941 and 1.92 MB. Devpost recommends a 3:2 image, so crop it before uploading rather than stretching it.
+**Submission thumbnail:** `docs/images/devpost-thumbnail.png` is a 1672×1115, 3:2-safe version of the social card (2.01 MB), ready for Devpost without cropping the name or tagline.
 
 ## About the project
 
 ### Inspiration
 
-For many Deaf and hard-of-hearing people, an ordinary phone-only task can become an accessibility barrier. A transcript alone is not enough: the user still has to prepare for an unpredictable conversation, decide what may be shared, and intervene without speaking. I wanted to build an accessibility assistant that could plan, reason, and speak while leaving the user visibly in control.
+An ordinary errand can stop at the words “please call us.” For a Deaf or hard-of-hearing person, a transcript solves only part of the problem. The call is still unpredictable, private details may come up, and interrupting without speaking is awkward.
+
+I built SayAhead to handle the speaking while keeping the user in charge of what is said, shared, and agreed to.
 
 ### What it does
 
-Call Assist is a supervised, text-first calling copilot for low-risk calls. The user chooses a destination, states the goal, supplies only the facts the assistant may share, sets hard boundaries, and confirms the request is low risk.
+SayAhead is a supervised, text-first assistant for low-risk phone calls. Before the call, the user enters the destination, goal, approved facts, and rules SayAhead must follow. They also confirm that the request is a low-risk call the product supports.
 
-GPT-5.6 Sol turns that request into a structured, reviewable call plan: an opening disclosure, conversation path, success criteria, approval gates, and stop conditions. During the conversation, large two-speaker captions separate the business from the assistant. The user can pause, type something for Call Assist to say, correct a detail, resume, decline a commitment, or end the call. Call Assist identifies itself as an AI accessibility assistant and asks for consent before live transcription and temporary text review. It stops for explicit approval before any supported no-payment reservation, appointment, registration, or cancellation.
+When OpenAI credentials are configured, GPT-5.6 Sol turns that request into a plan the user can review: the opening disclosure, conversation path, success criteria, approval points, and conditions for stopping. During a live call, large two-speaker captions separate the person answering from the SayAhead assistant. The user can pause, type something for the assistant to say, correct a detail, resume, decline a commitment, or end the call.
 
-After the call, GPT-5.6 can structure the result into confirmed details, a reference number, unresolved questions, and next actions. The complete transcript remains available separately for the user to review. No audio is recorded. The review text stays in the current browser tab and can be cleared explicitly.
+SayAhead’s AI accessibility assistant identifies itself and asks permission to continue with live transcription and keep a temporary review transcript before discussing the request. It describes the user as Deaf or hard of hearing only when the user has explicitly approved sharing that fact. It also stops before any supported reservation, appointment, registration, or cancellation that does not involve payment. The assistant may do the talking, but it does not get a blank check.
 
-The public build defaults to a deterministic, judge-safe simulation that needs no account or credentials. A separate credential-gated live path is implemented for consented, allowlisted destinations using Twilio outbound calling and OpenAI Realtime.
+Afterward, GPT-5.6 can turn the conversation into confirmed details, a reference number, unresolved questions, and next steps. The user's review copy remains available in the current browser tab and can be cleared. SayAhead does not record or store audio.
+
+The public version is a transparent, deterministic simulation that requires no account or credentials and places no phone call. The private live path uses Twilio and OpenAI Realtime for consented, allowlisted destinations.
 
 ### How I built it
 
-The accessible web experience uses React 19, Next.js 16, TypeScript, and vinext. The planning and outcome routes use the OpenAI Responses API with GPT-5.6 Sol and strict Zod-backed schemas. The deterministic demo fills those same contracts, so the public fallback and credential-backed mode exercise one product flow.
+The web app uses React 19, Next.js 16, TypeScript, and vinext. The planning and outcome routes use the OpenAI Responses API with GPT-5.6 Sol. Both return strict, Zod-validated data. The deterministic demo fills those same contracts, so it exercises the real interface instead of maintaining a separate mock product.
 
-A separate Fastify service owns long-lived telephony connections. It creates a Twilio outbound call and bridges Twilio's bidirectional Media Stream to an OpenAI Realtime session through the OpenAI Agents SDK. The browser only receives normalized call-state, caption, approval, and error events; provider credentials, audio frames, and raw payloads remain on the server.
+A Fastify service handles the long-lived telephony connection. It starts the outbound call with Twilio, then bridges Twilio's bidirectional Media Stream to OpenAI Realtime through the OpenAI Agents SDK. The browser receives normalized captions, call states, approval requests, and errors. Provider credentials, raw audio, and vendor payloads stay on the server.
 
-Server-side screening blocks emergency calls, payments, telemarketing, bulk outreach, and high-stakes medical or financial transactions. Live calling is additionally protected by a service token, destination allowlist, and Twilio signature validation.
+Server-side checks reject emergencies, payments, telemarketing, bulk outreach, and high-stakes medical or financial transactions. A private service token, destination allowlist, and Twilio signature validation protect the live-calling path.
 
 ### How Codex and GPT-5.6 contributed
 
-I collaborated with Codex throughout the project, from product scoping to implementation and verification. Codex helped translate the accessibility goal into safety boundaries and stable event contracts; scaffold and refine the React interface, API routes, schemas, prompts, Fastify service, and Twilio/OpenAI bridge; add accessibility and transcript-retention behavior; diagnose live-call issues; and build the deterministic demo and automated test coverage. It repeatedly ran type checks, linting, unit tests, production builds, rendered-page checks, and media QA while I reviewed the product behavior and made the final decisions.
+I used Codex from product scoping through verification. It helped me define safety boundaries and stable event contracts, then implement the React UI, API routes, schemas, prompts, Fastify service, and Twilio/OpenAI bridge. Codex also added tests and transcript-retention behavior, diagnosed live-call bugs, and ran type checks, linting, unit tests, production builds, rendered-page checks, and media QA. I reviewed the behavior and made the final product decisions.
 
-The key human decisions were to keep the first release low risk, defer dynamic IVR/DTMF, require an opening disclosure and transcription consent, retain transcripts only in the current tab, stop before commitments, and keep a credential-free public simulation. After live testing showed the conversation felt pressuring, I directed a prompt change: the assistant now synthesizes context, makes tentative low-risk inferences, asks at most two substantive clarification questions, and explains its accessibility role and that the user is following through live captions. It names the user as Deaf or hard of hearing only when the user has explicitly included that identity in the approved facts.
+I decided to keep the first release low risk, defer dynamic IVR/DTMF, require disclosure and transcription consent, process the temporary transcript once for the outcome, keep the user's review copy in the current tab, and stop before commitments. A live test exposed another problem: the assistant asked too many questions and made the recipient feel pressured. A phone assistant should reduce pressure, not turn the call into a pop quiz. I changed the prompt so it now synthesizes context, makes tentative low-risk inferences, and asks no more than two substantive clarification questions. It mentions that the user is Deaf or hard of hearing only when that identity appears in the approved facts.
 
-GPT-5.6 is meaningful in two ways: it powered the Codex collaboration used to build the project, and GPT-5.6 Sol is integrated at runtime to produce reviewable call plans and structured post-call outcomes when credentials are configured.
+GPT-5.6 did two distinct jobs: it powered my Codex build collaboration, and GPT-5.6 Sol runs inside the app to create reviewable call plans and structured post-call outcomes when credentials are configured.
 
 ### Challenges
 
-The hardest engineering boundary was connecting two realtime systems without exposing provider credentials or audio payloads to the browser. The hardest product challenge was balancing autonomy with control: the assistant must move the call forward naturally without interrogating the person answering or making an unauthorized commitment. Privacy added another constraint—keeping a useful transcript available after the call while avoiding audio recording and durable transcript storage.
+Connecting Twilio and OpenAI Realtime without exposing credentials or raw audio to the browser was the main engineering problem. That led to a separate telephony service and a smaller, provider-neutral event contract for the interface.
+
+The harder product problem was finding the right balance between initiative and control. An assistant that never asks is reckless; one that asks about everything is exhausting. Live testing pushed the design toward tentative inference, fewer questions, visible correction controls, and explicit approval points.
+
+Privacy created one more constraint: the transcript needed to remain useful after the call without becoming a permanent record. SayAhead records no audio. It processes the temporary transcript once to create the outcome, deletes the calling service's caption copy after the outcome or when it expires, and keeps the user's review copy in the current tab until it is cleared, the tab is refreshed or closed, or another call begins.
 
 ### Accomplishments
 
-Call Assist now presents a coherent end-to-end experience: accessible setup, a visible planning process, plan review, large live captions, typed intervention, pause and correction controls, approval gates, and a structured outcome with transcript review. The credential-backed and deterministic paths share the same schemas. The public demo needs no login, while the live telephony path remains private and allowlisted.
+SayAhead now has a complete supervised flow: accessible setup, visible planning, plan review, large captions, typed intervention, pause and correction controls, approval points, and a structured outcome with transcript review.
+
+The private path connects Twilio telephony to OpenAI Realtime. The public demo gives judges the same plan, captions, controls, approvals, and outcome flow without exposing credentials or calling a real person. Judges need no login.
 
 ### What I learned
 
-The right model for this problem is supervised autonomy, not full autonomy. Accessibility means more than displaying text; it means designing the assistant's timing, language, consent behavior, and decision boundaries around the person it is helping. I also learned that a deterministic demo is strongest when it is an adapter for the real contracts rather than a separate mock interface.
+Supervised autonomy is a better fit for this problem than full autonomy. A transcript is useful, but it is not a steering wheel. The user also needs control over timing, language, consent, privacy, and commitments.
+
+I learned something similar from the demo: a deterministic simulation works best when it follows the real plan and outcome formats instead of merely imitating the interface. Judges can test the whole interaction without placing a call, while the implementation still shows how the private live path works.
 
 ### What's next
 
-Next steps include carefully scoped IVR/DTMF support, more caption personalization, multilingual calling, a shared ephemeral event store for production scaling, deeper privacy review, and consented pilots with Deaf and hard-of-hearing users. I would also evaluate GPT-Live once a stable public API contract is available.
+The next step is consented testing with Deaf and hard-of-hearing users. Their feedback should guide caption personalization, conversational pacing, and which low-risk scenarios are worth supporting next.
+
+On the engineering side, I would add carefully scoped IVR/DTMF support, multilingual calling, a shared ephemeral event store for production scaling, and a deeper privacy review. I would also evaluate GPT-Live when a stable public API contract is available.
 
 ## Built with
 
@@ -88,19 +100,25 @@ Devpost accepts up to 25 tags. Proposed tags:
 ## Try it out
 
 - Working project: https://call-assist-accessible-calls.bearhuddleston.chatgpt.site/
-- Source repository: https://github.com/BearHuddleston/call-assist
-- Demo video: https://youtu.be/nhh0-V-DEPc
+- Source repository: https://github.com/BearHuddleston/sayahead
+- Demo video: https://youtu.be/l9JLMYTbUMs
 
 ## Judge-only testing instructions
 
-No account or credentials are required. Open the public demo and use the prefilled library-room request. Confirm that it is a low-risk call, then select **Create call plan** and watch the four visible planning phases. Review the disclosure, success criteria, conversation path, and approval gate. Select **Run safe demo**. Follow the large Business and Call Assist captions; pause the assistant, type guidance or use **Correct a detail**, then resume. When the assistant stops at the room-reservation gate, approve the no-cost commitment. Review the structured result, reference number, next actions, and retained transcript, then use **Clear from this tab**.
+No account or credentials are required.
 
-This path is a deterministic simulation and places no phone call; no audio is recorded. The live Twilio/OpenAI Realtime path is private, credential-gated, and allowlisted.
+1. Open the public demo; the library-room request is already filled in.
+2. Confirm that it is a low-risk call, then select **Create call plan** and watch the four planning phases.
+3. Review the disclosure, conversation path, confirmation goals, and approval point. Select **Start simulated call**.
+4. Follow the **SayAhead assistant** and **Person answering** captions. Pause the assistant, type guidance or choose **Correct a detail**, then resume.
+5. Approve the no-cost room reservation when prompted. Review the result, reference number, next step, and transcript, then choose **Clear from this tab**.
+
+This path is a deterministic simulation and places no phone call. SayAhead does not record or store audio. The live Twilio/OpenAI Realtime path is private, credential-gated, and allowlisted.
 
 ## Submission form status
 
 - `/feedback` Codex Session ID: **Entered in Devpost**
-- Final project-name confirmation: **Call Assist**
+- Final project-name confirmation: **SayAhead**
 - Submitter type: **Individual**
 - Country of residence: **United States**
 - Solo/team confirmation: **Solo submission**

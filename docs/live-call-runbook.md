@@ -1,6 +1,6 @@
 # Controlled live-call runbook
 
-Use this only for a consented, low-risk test destination. Keep the judge-safe simulation available throughout the demo.
+Use this only for a consented, low-risk test destination. Keep the credential-free simulation available throughout the demo.
 
 ## 1. Configure without committing secrets
 
@@ -31,7 +31,7 @@ Confirm `GET /health` returns `{"ok":true,"ready":true}`. The response intention
 ## 3. Place one supervised call
 
 1. Open the web app and confirm the header says **Live service ready**.
-2. Choose **Allowlisted live destination…** and enter the consented business name and exact allowlisted number.
+2. Choose **Approved live number…** and enter the consented business name and exact allowlisted number.
 3. Create and review the call plan.
 4. Start the supervised live call and watch for ringing, disclosure, and consent for live transcription plus temporary post-call text review.
 5. Exercise pause/resume or typed guidance once.
@@ -49,7 +49,7 @@ End immediately if the recipient declines transcription, the call reaches an IVR
 - Record the test result without copying the transcript into logs or documentation.
 - Rotate any credential that was exposed outside its intended secret store.
 
-Reference architecture: [OpenAI Realtime and audio](https://developers.openai.com/api/docs/guides/realtime), [Twilio bidirectional Media Streams](https://www.twilio.com/docs/voice/media-streams), and [Twilio request validation](https://www.twilio.com/docs/usage/security).
+References: [OpenAI Realtime and audio](https://developers.openai.com/api/docs/guides/realtime), [Twilio bidirectional Media Streams](https://www.twilio.com/docs/voice/media-streams), and [Twilio request validation](https://www.twilio.com/docs/usage/security).
 
 ## Build Week validation record
 

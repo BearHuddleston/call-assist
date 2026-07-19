@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   configuredAllowlist,
+  DEMO_DESTINATIONS,
+  demoRequestMatchesPreset,
   normalizePhoneNumber,
   screenCallRequest,
 } from "../lib/safety.ts";
@@ -25,10 +27,29 @@ test("allows a confirmed low-risk call to a demo destination", () => {
   assert.deepEqual(screenCallRequest(safeRequest), { allowed: true, reasons: [] });
 });
 
+test("each demo destination has an exact goal-and-facts preset", () => {
+  for (const destination of DEMO_DESTINATIONS) {
+    const presetRequest = {
+      ...safeRequest,
+      destinationId: destination.id,
+      destinationName: destination.name,
+      phoneNumber: destination.phoneNumber,
+      goal: destination.defaultGoal,
+      facts: destination.defaultFacts,
+    };
+
+    assert.equal(demoRequestMatchesPreset(presetRequest), true);
+    assert.equal(
+      demoRequestMatchesPreset({ ...presetRequest, facts: `${presetRequest.facts}\nEdited` }),
+      false,
+    );
+  }
+});
+
 test("blocks a number that is not allowlisted", () => {
   const result = screenCallRequest({ ...safeRequest, phoneNumber: "+14155550123" });
   assert.equal(result.allowed, false);
-  assert.match(result.reasons.join(" "), /allowlist/i);
+  assert.match(result.reasons.join(" "), /not approved/i);
 });
 
 test("blocks emergency, payment, and high-stakes requests", () => {
@@ -41,4 +62,3 @@ test("blocks emergency, payment, and high-stakes requests", () => {
     assert.equal(result.allowed, false, goal);
   }
 });
-
