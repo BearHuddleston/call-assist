@@ -101,7 +101,7 @@ Devpost accepts up to 25 tags. Proposed tags:
 
 - Working project: https://call-assist-accessible-calls.bearhuddleston.chatgpt.site/
 - Source repository: https://github.com/BearHuddleston/sayahead
-- Demo video: pending new public SayAhead upload
+- Demo video: https://youtu.be/l9JLMYTbUMs
 
 ## Judge-only testing instructions
 
@@ -122,6 +122,6 @@ This path is a deterministic simulation and places no phone call. SayAhead does 
 - Submitter type: **Individual**
 - Country of residence: **United States**
 - Solo/team confirmation: **Solo submission**
-- Video visibility: **New SayAhead upload pending.**
+- Video visibility: **Public and accessible without authentication.**
 - Official Rules and Devpost Terms acceptance: **USER ACTION REQUIRED at final submission**
 - Final submission and confirmation screenshot: **TODO**

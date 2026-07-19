@@ -72,5 +72,5 @@ The script generates the title and end cards, narration audio, burned-in caption
 - Accessibility: spoken and visual AI-narration disclosure, burned-in narration captions, and **47** matching cues in `output/sayahead-demo.srt`, ending at **00:02:58,100**
 - Technical QA: full video/audio decode completed without warnings or errors
 - SHA-256: `44894e88fd858a5d5e25ee06d5133b343e84f92b5209bc92972b8de84922d910`
-- Publication state: ready for a new **Public** YouTube upload; publication is pending
-- Video URL: pending new upload
+- Publication state: published **Public** on YouTube
+- Video URL: https://youtu.be/l9JLMYTbUMs

@@ -13,7 +13,7 @@
 
 <p align="center">
   <a href="https://call-assist-accessible-calls.bearhuddleston.chatgpt.site/"><img src="https://img.shields.io/badge/Try_the_demo-Open-2563EB?style=for-the-badge" alt="Open the SayAhead demo"></a>
-  <a href="https://youtu.be/nhh0-V-DEPc"><img src="https://img.shields.io/badge/Watch_the_demo-2%3A52-0F172A?style=for-the-badge" alt="Watch the 2 minute 52 second demo"></a>
+  <a href="https://youtu.be/l9JLMYTbUMs"><img src="https://img.shields.io/badge/Watch_the_demo-2%3A59-0F172A?style=for-the-badge" alt="Watch the 2 minute 59 second SayAhead demo"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-15803D?style=for-the-badge" alt="MIT License"></a>
 </p>
 

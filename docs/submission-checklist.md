@@ -19,13 +19,13 @@ Deadline: July 21, 2026 at 5:00 PM Pacific.
 - [x] Show setup, plan review, large captions, pause/correction, approval, and outcome
 - [x] Mention the AI/accessibility disclosure, clear transcription consent, no audio recording, and low-risk scope
 - [x] Keep the deterministic simulation available without credentials
-- [ ] Publish the final SayAhead replacement video publicly, as required by the official rules
+- [x] Publish the final SayAhead replacement video publicly, as required by the official rules
 
 ## Submission form
 
 - [x] Public GitHub repository URL ready
 - [x] Deployed judge-access URL ready
-- [ ] New SayAhead YouTube URL ready and accessible without authentication
+- [x] New SayAhead YouTube URL ready and accessible without authentication
 - [x] Add the `/feedback` session ID from the task where most core functionality was built
 - [x] Confirm **SayAhead** as the final project name
 - [x] Save the submitter type (**Individual**), country (**United States**), and solo status
